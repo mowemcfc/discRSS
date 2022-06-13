@@ -1,0 +1,20 @@
+{
+  "version": "19.0.0",
+  "files": {
+    "e188a6c4513d7d2131723115cd3c969d6f6dd4ab1b34267270a33dfde78f99d6": {
+      "source": {
+        "path": "DiscRssStack.template.json",
+        "packaging": "file"
+      },
+      "destinations": {
+        "891854796411-us-east-1": {
+          "bucketName": "cdk-hnb659fds-assets-891854796411-us-east-1",
+          "objectKey": "e188a6c4513d7d2131723115cd3c969d6f6dd4ab1b34267270a33dfde78f99d6.json",
+          "region": "us-east-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::891854796411:role/cdk-hnb659fds-file-publishing-role-891854796411-us-east-1"
+        }
+      }
+    }
+  },
+  "dockerImages": {}
+}

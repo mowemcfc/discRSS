@@ -1,0 +1,70 @@
+{
+  "version": "19.0.0",
+  "artifacts": {
+    "Tree": {
+      "type": "cdk:tree",
+      "properties": {
+        "file": "tree.json"
+      }
+    },
+    "DiscRssStack.assets": {
+      "type": "cdk:asset-manifest",
+      "properties": {
+        "file": "DiscRssStack.assets.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+      }
+    },
+    "DiscRssStack": {
+      "type": "aws:cloudformation:stack",
+      "environment": "aws://891854796411/us-east-1",
+      "properties": {
+        "templateFile": "DiscRssStack.template.json",
+        "validateOnSynth": false,
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::891854796411:role/cdk-hnb659fds-deploy-role-891854796411-us-east-1",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::891854796411:role/cdk-hnb659fds-cfn-exec-role-891854796411-us-east-1",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-891854796411-us-east-1/e188a6c4513d7d2131723115cd3c969d6f6dd4ab1b34267270a33dfde78f99d6.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
+        "additionalDependencies": [
+          "DiscRssStack.assets"
+        ],
+        "lookupRole": {
+          "arn": "arn:${AWS::Partition}:iam::891854796411:role/cdk-hnb659fds-lookup-role-891854796411-us-east-1",
+          "requiresBootstrapStackVersion": 8,
+          "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+        }
+      },
+      "dependencies": [
+        "DiscRssStack.assets"
+      ],
+      "metadata": {
+        "/DiscRssStack/DiscRsScdkQueue/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DiscRsScdkQueue243D9815"
+          }
+        ],
+        "/DiscRssStack/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/DiscRssStack/BootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BootstrapVersion"
+          }
+        ],
+        "/DiscRssStack/CheckBootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CheckBootstrapVersion"
+          }
+        ]
+      },
+      "displayName": "DiscRssStack"
+    }
+  }
+}
