@@ -32,15 +32,15 @@ func commentNewPosts(sess *discordgo.Session, wg *sync.WaitGroup, feed feed) {
 	defer wg.Done()
 	fp := gofeed.NewParser()
 
-	resp, _ := fp.ParseURL(feed.url)
+	parsedFeed, _ := fp.ParseURL(feed.url)
 
 	lastChecked, _ := time.Parse(LAST_CHECKED_TIME_FORMAT, LAST_CHECKED_TIME)
-	fmt.Println(lastChecked)
 
-	fmt.Printf("feed: %s\n", feed.title)
-	for _, item := range resp.Items {
+	for _, item := range parsedFeed.Items {
 		publishedTime, _ := time.Parse(feed.timeFormat, item.Published)
+
 		if publishedTime.After(lastChecked) {
+
 			var message = &discordgo.MessageSend{
 				Content: fmt.Sprintf("**%s**\n\n%s", item.Title, item.Link),
 			}
@@ -49,6 +49,7 @@ func commentNewPosts(sess *discordgo.Session, wg *sync.WaitGroup, feed feed) {
 				fmt.Printf("Error sending message: %s", err)
 				return
 			}
+
 		}
 	}
 
