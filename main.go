@@ -17,7 +17,7 @@ type feed struct {
 }
 
 const CHANNEL_ID = "985831956203851786"
-const LAST_CHECKED_TIME = "2022-06-01T00:00:00+10:00"
+const LAST_CHECKED_TIME = "2022-06-10T00:00:00+10:00"
 const LAST_CHECKED_TIME_FORMAT = time.RFC3339
 
 var feedURLS = [...]feed{
@@ -34,18 +34,25 @@ func commentNewPosts(sess *discordgo.Session, wg *sync.WaitGroup, feed feed) {
 
 	parsedFeed, _ := fp.ParseURL(feed.url)
 
-	lastChecked, _ := time.Parse(LAST_CHECKED_TIME_FORMAT, LAST_CHECKED_TIME)
+	lastChecked, err := time.Parse(LAST_CHECKED_TIME_FORMAT, LAST_CHECKED_TIME)
+
+	if err != nil {
+		fmt.Printf("Unable to parse last_checked datetime string: %s", err)
+		return
+	}
 
 	for _, item := range parsedFeed.Items {
 		publishedTime, _ := time.Parse(feed.timeFormat, item.Published)
+		if err != nil {
+			fmt.Printf("Unable to parse published_time datetime string for post %s in blog %s: %s", item.Title, feed.title, err)
+			return
+		}
 
 		if publishedTime.After(lastChecked) {
 
-			var message = &discordgo.MessageSend{
-				Content: fmt.Sprintf("**%s**\n\n%s", item.Title, item.Link),
-			}
+			var message string = fmt.Sprintf("**%s**\n\n%s", item.Title, item.Link)
 
-			if _, err := sess.ChannelMessageSendComplex(CHANNEL_ID, message); err != nil {
+			if _, err := sess.ChannelMessageSend(CHANNEL_ID, message); err != nil {
 				fmt.Printf("Error sending message: %s", err)
 				return
 			}
@@ -72,7 +79,6 @@ func main() {
 	var wg sync.WaitGroup
 	for _, feedURL := range feedURLS {
 		wg.Add(1)
-
 		go commentNewPosts(discord, &wg, feedURL)
 	}
 
