@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"sync"
 	"time"
 
@@ -16,8 +17,13 @@ type feed struct {
 	timeFormat string
 }
 
-const CHANNEL_ID = "985831956203851786"
-const LAST_CHECKED_TIME = "2022-06-10T00:00:00+10:00"
+type discordChannel struct {
+	channel_name string
+	server_name  string
+	channel_id   int
+}
+
+const LAST_CHECKED_TIME = "2022-07-10T00:00:00+10:00"
 const LAST_CHECKED_TIME_FORMAT = time.RFC3339
 
 var feedURLS = [...]feed{
@@ -26,6 +32,11 @@ var feedURLS = [...]feed{
 	{title: "Scattered Thoughts", url: "https://www.scattered-thoughts.net/feed", timeFormat: time.RFC3339},
 	{title: "Ben Kuhn", url: "https://www.benkuhn.net/rss", timeFormat: time.RFC3339},
 	{title: "Carefree Wandering", url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCnEuIogVV2Mv6Q1a3nHIRsQ", timeFormat: time.RFC3339},
+}
+
+var subscribedChannels = [...]discordChannel{
+	{channel_name: "mowes mate", server_name: "mines", channel_id: 985831956203851786},
+	{channel_name: "pisser", server_name: "klnkn (pers)", channel_id: 1000661720215343114},
 }
 
 func commentNewPosts(sess *discordgo.Session, wg *sync.WaitGroup, feed feed) {
@@ -49,14 +60,14 @@ func commentNewPosts(sess *discordgo.Session, wg *sync.WaitGroup, feed feed) {
 		}
 
 		if publishedTime.After(lastChecked) {
+			var message string = fmt.Sprintf("**%s**\n%s\n", item.Title, item.Link)
 
-			var message string = fmt.Sprintf("**%s**\n\n%s", item.Title, item.Link)
-
-			if _, err := sess.ChannelMessageSend(CHANNEL_ID, message); err != nil {
-				fmt.Printf("Error sending message: %s", err)
-				return
+			for _, channel := range subscribedChannels {
+				if _, err := sess.ChannelMessageSend(strconv.Itoa(channel.channel_id), message); err != nil {
+					fmt.Printf("Error sending message: %s", err)
+					return
+				}
 			}
-
 		}
 	}
 
