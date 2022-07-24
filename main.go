@@ -61,7 +61,6 @@ func commentNewPosts(sess *discordgo.Session, wg *sync.WaitGroup, feed feed) {
 
 		if publishedTime.After(lastChecked) {
 			var message string = fmt.Sprintf("**%s**\n%s\n", item.Title, item.Link)
-
 			for _, channel := range subscribedChannels {
 				if _, err := sess.ChannelMessageSend(strconv.Itoa(channel.channel_id), message); err != nil {
 					fmt.Printf("Error sending message: %s", err)
