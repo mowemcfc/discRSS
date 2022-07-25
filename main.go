@@ -86,6 +86,7 @@ func main() {
 		return
 	}
 
+	// Initialise a WaitGroup that will spawn a goroutine per subscribed RSS feed to post all new content
 	var wg sync.WaitGroup
 	for _, feedURL := range feedURLS {
 		wg.Add(1)
