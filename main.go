@@ -23,7 +23,7 @@ type discordChannel struct {
 	channel_id   int
 }
 
-const LAST_CHECKED_TIME = "2022-07-10T00:00:00+10:00"
+const LAST_CHECKED_TIME = "2022-08-10T00:00:00+10:00"
 const LAST_CHECKED_TIME_FORMAT = time.RFC3339
 
 var feedURLS = [...]feed{
