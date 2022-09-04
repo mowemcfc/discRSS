@@ -32,6 +32,7 @@ type DiscordChannel struct {
 
 const LAST_CHECKED_TIME = "2022-08-30T00:00:00+10:00"
 const LAST_CHECKED_TIME_FORMAT = time.RFC3339
+const currentUser = "mowemcfc"
 
 var moweFeeds = []Feed{
 	{FeedID: 1, Title: "The Future Does Not Fit In The Containers Of The Past", Url: "https://rishad.substack.com/feed", TimeFormat: time.RFC1123},
@@ -99,11 +100,9 @@ func main() {
 	}
 
 	UserFeedLists = make(map[string]UserFeedList)
-	UserFeedLists["mowemcfc"] = UserFeedList{
+	UserFeedLists[currentUser] = UserFeedList{
 		moweFeeds,
 	}
-
-	var currentUser = "mowemcfc"
 
 	// Initialise a WaitGroup that will spawn a goroutine per subscribed RSS feed to post all new content
 	var wg sync.WaitGroup
