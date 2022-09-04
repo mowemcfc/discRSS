@@ -11,39 +11,51 @@ import (
 	"github.com/mmcdole/gofeed"
 )
 
-type feed struct {
-	title      string
-	url        string
-	timeFormat string
+type Feed struct {
+	FeedID     int    `json:"feedID"`
+	Title      string `json:"title"`
+	Url        string `json:"url"`
+	TimeFormat string `json:"TimeFormat"`
 }
 
-type discordChannel struct {
-	channel_name string
-	server_name  string
-	channel_id   int
+type UserFeedList struct {
+	Feeds []Feed `json:"feeds"`
 }
 
-const LAST_CHECKED_TIME = "2022-08-10T00:00:00+10:00"
+var UserFeedLists map[int]UserFeedList
+
+type DiscordChannel struct {
+	ChannelName string `json:"channelName"`
+	ServerName  string `json:"serverName"`
+	ChannelID   int    `json:"channelID"`
+}
+
+const LAST_CHECKED_TIME = "2022-08-30T00:00:00+10:00"
 const LAST_CHECKED_TIME_FORMAT = time.RFC3339
 
-var feedURLS = [...]feed{
-	{title: "The Future Does Not Fit In The Containers Of The Past", url: "https://rishad.substack.com/feed", timeFormat: time.RFC1123},
-	{title: "Dan Luu", url: "https://danluu.com/atom.xml", timeFormat: time.RFC1123Z},
-	{title: "Scattered Thoughts", url: "https://www.scattered-thoughts.net/feed", timeFormat: time.RFC3339},
-	{title: "Ben Kuhn", url: "https://www.benkuhn.net/rss", timeFormat: time.RFC3339},
-	{title: "Carefree Wandering", url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCnEuIogVV2Mv6Q1a3nHIRsQ", timeFormat: time.RFC3339},
+var moweFeeds = []Feed{
+	{FeedID: 1, Title: "The Future Does Not Fit In The Containers Of The Past", Url: "https://rishad.substack.com/feed", TimeFormat: time.RFC1123},
+	{FeedID: 2, Title: "Dan Luu", Url: "https://danluu.com/atom.xml", TimeFormat: time.RFC1123Z},
+	{FeedID: 3, Title: "Scattered Thoughts", Url: "https://www.scattered-thoughts.net/feed", TimeFormat: time.RFC3339},
+	{FeedID: 4, Title: "Ben Kuhn", Url: "https://www.benkuhn.net/rss", TimeFormat: time.RFC3339},
+	{FeedID: 5, Title: "Carefree Wandering", Url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCnEuIogVV2Mv6Q1a3nHIRsQ", TimeFormat: time.RFC3339},
 }
 
-var subscribedChannels = [...]discordChannel{
-	{channel_name: "mowes mate", server_name: "mines", channel_id: 985831956203851786},
-	{channel_name: "rss", server_name: "klnkn (pers)", channel_id: 1000661720215343114},
+var subscribedChannels = [...]DiscordChannel{
+	{ChannelID: 985831956203851786, ChannelName: "mowes mate", ServerName: "mines"},
+	{ChannelID: 958948046606053406, ChannelName: "rss", ServerName: "klnkn (pers)"},
 }
 
-func commentNewPosts(sess *discordgo.Session, wg *sync.WaitGroup, feed feed) {
+func commentNewPosts(sess *discordgo.Session, wg *sync.WaitGroup, feed Feed) {
 	defer wg.Done()
 	fp := gofeed.NewParser()
 
-	parsedFeed, _ := fp.ParseURL(feed.url)
+	parsedFeed, err := fp.ParseURL(feed.Url)
+
+	if err != nil {
+		fmt.Printf("Unable to parse URL %s for feed %s: %s", feed.Url, feed.Title, err)
+		return
+	}
 
 	lastChecked, err := time.Parse(LAST_CHECKED_TIME_FORMAT, LAST_CHECKED_TIME)
 
@@ -53,16 +65,16 @@ func commentNewPosts(sess *discordgo.Session, wg *sync.WaitGroup, feed feed) {
 	}
 
 	for _, item := range parsedFeed.Items {
-		publishedTime, _ := time.Parse(feed.timeFormat, item.Published)
+		publishedTime, err := time.Parse(feed.TimeFormat, item.Published)
 		if err != nil {
-			fmt.Printf("Unable to parse published_time datetime string for post %s in blog %s: %s", item.Title, feed.title, err)
+			fmt.Printf("Unable to parse published_time datetime string for post %s in blog %s: %s", item.Title, feed.Title, err)
 			return
 		}
 
 		if publishedTime.After(lastChecked) {
 			var message string = fmt.Sprintf("**%s**\n%s\n", item.Title, item.Link)
 			for _, channel := range subscribedChannels {
-				if _, err := sess.ChannelMessageSend(strconv.Itoa(channel.channel_id), message); err != nil {
+				if _, err := sess.ChannelMessageSend(strconv.Itoa(channel.ChannelID), message); err != nil {
 					fmt.Printf("Error sending message: %s", err)
 					return
 				}
@@ -86,11 +98,18 @@ func main() {
 		return
 	}
 
+	UserFeedLists = make(map[int]UserFeedList)
+	UserFeedLists[1] = UserFeedList{
+		moweFeeds,
+	}
+
+	var currentUser = UserFeedLists[1]
+
 	// Initialise a WaitGroup that will spawn a goroutine per subscribed RSS feed to post all new content
 	var wg sync.WaitGroup
-	for _, feedURL := range feedURLS {
+	for _, feed := range currentUser.Feeds {
 		wg.Add(1)
-		go commentNewPosts(discord, &wg, feedURL)
+		go commentNewPosts(discord, &wg, feed)
 	}
 
 	wg.Wait()

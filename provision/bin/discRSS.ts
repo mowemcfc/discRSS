@@ -5,5 +5,5 @@ import { DiscRssStack } from '../lib/discRSSStack';
 
 const app = new cdk.App();
 new DiscRssStack(app, 'DiscRssStack', {
-  env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION },
+  env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: 'ap-southeast-2' },
 });
