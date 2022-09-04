@@ -36,7 +36,7 @@ var feedURLS = [...]feed{
 
 var subscribedChannels = [...]discordChannel{
 	{channel_name: "mowes mate", server_name: "mines", channel_id: 985831956203851786},
-	{channel_name: "pisser", server_name: "klnkn (pers)", channel_id: 1000661720215343114},
+	{channel_name: "rss", server_name: "klnkn (pers)", channel_id: 1000661720215343114},
 }
 
 func commentNewPosts(sess *discordgo.Session, wg *sync.WaitGroup, feed feed) {
