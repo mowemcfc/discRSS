@@ -22,7 +22,7 @@ type UserFeedList struct {
 	Feeds []Feed `json:"feeds"`
 }
 
-var UserFeedLists map[int]UserFeedList
+var UserFeedLists map[string]UserFeedList
 
 type DiscordChannel struct {
 	ChannelName string `json:"channelName"`
@@ -98,16 +98,16 @@ func main() {
 		return
 	}
 
-	UserFeedLists = make(map[int]UserFeedList)
-	UserFeedLists[1] = UserFeedList{
+	UserFeedLists = make(map[string]UserFeedList)
+	UserFeedLists["mowemcfc"] = UserFeedList{
 		moweFeeds,
 	}
 
-	var currentUser = UserFeedLists[1]
+	var currentUser = "mowemcfc"
 
 	// Initialise a WaitGroup that will spawn a goroutine per subscribed RSS feed to post all new content
 	var wg sync.WaitGroup
-	for _, feed := range currentUser.Feeds {
+	for _, feed := range UserFeedLists[currentUser].Feeds {
 		wg.Add(1)
 		go commentNewPosts(discord, &wg, feed)
 	}
