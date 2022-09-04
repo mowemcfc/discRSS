@@ -18,11 +18,14 @@ type Feed struct {
 	TimeFormat string `json:"TimeFormat"`
 }
 
-type UserFeedList struct {
-	Feeds []Feed `json:"feeds"`
-}
+var UserAccounts map[string]UserAccount
 
-var UserFeedLists map[string]UserFeedList
+type UserAccount struct {
+	UserID      int              `json:"userID"`
+	Username    string           `json:"username"`
+	FeedList    []Feed           `json:"feedList"`
+	ChannelList []DiscordChannel `json:"channelList"`
+}
 
 type DiscordChannel struct {
 	ChannelName string `json:"channelName"`
@@ -34,7 +37,7 @@ const LAST_CHECKED_TIME = "2022-08-30T00:00:00+10:00"
 const LAST_CHECKED_TIME_FORMAT = time.RFC3339
 const currentUser = "mowemcfc"
 
-var moweFeeds = []Feed{
+var localFeeds = []Feed{
 	{FeedID: 1, Title: "The Future Does Not Fit In The Containers Of The Past", Url: "https://rishad.substack.com/feed", TimeFormat: time.RFC1123},
 	{FeedID: 2, Title: "Dan Luu", Url: "https://danluu.com/atom.xml", TimeFormat: time.RFC1123Z},
 	{FeedID: 3, Title: "Scattered Thoughts", Url: "https://www.scattered-thoughts.net/feed", TimeFormat: time.RFC3339},
@@ -42,12 +45,12 @@ var moweFeeds = []Feed{
 	{FeedID: 5, Title: "Carefree Wandering", Url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCnEuIogVV2Mv6Q1a3nHIRsQ", TimeFormat: time.RFC3339},
 }
 
-var subscribedChannels = [...]DiscordChannel{
+var localChannels = []DiscordChannel{
 	{ChannelID: 985831956203851786, ChannelName: "mowes mate", ServerName: "mines"},
 	{ChannelID: 958948046606053406, ChannelName: "rss", ServerName: "klnkn (pers)"},
 }
 
-func commentNewPosts(sess *discordgo.Session, wg *sync.WaitGroup, feed Feed) {
+func commentNewPosts(sess *discordgo.Session, wg *sync.WaitGroup, feed Feed, channelList []DiscordChannel) {
 	defer wg.Done()
 	fp := gofeed.NewParser()
 
@@ -74,7 +77,7 @@ func commentNewPosts(sess *discordgo.Session, wg *sync.WaitGroup, feed Feed) {
 
 		if publishedTime.After(lastChecked) {
 			var message string = fmt.Sprintf("**%s**\n%s\n", item.Title, item.Link)
-			for _, channel := range subscribedChannels {
+			for _, channel := range channelList {
 				if _, err := sess.ChannelMessageSend(strconv.Itoa(channel.ChannelID), message); err != nil {
 					fmt.Printf("Error sending message: %s", err)
 					return
@@ -99,16 +102,19 @@ func main() {
 		return
 	}
 
-	UserFeedLists = make(map[string]UserFeedList)
-	UserFeedLists[currentUser] = UserFeedList{
-		moweFeeds,
+	UserAccounts = make(map[string]UserAccount)
+	UserAccounts[currentUser] = UserAccount{
+		1,
+		currentUser,
+		localFeeds,
+		localChannels,
 	}
 
 	// Initialise a WaitGroup that will spawn a goroutine per subscribed RSS feed to post all new content
 	var wg sync.WaitGroup
-	for _, feed := range UserFeedLists[currentUser].Feeds {
+	for _, feed := range UserAccounts[currentUser].FeedList {
 		wg.Add(1)
-		go commentNewPosts(discord, &wg, feed)
+		go commentNewPosts(discord, &wg, feed, UserAccounts[currentUser].ChannelList)
 	}
 
 	wg.Wait()
