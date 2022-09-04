@@ -4,6 +4,9 @@
 ## TODO
 
 - [ ] cdk stack to host app on lambda
+- [ ] make table retention policy DESTROY
+- [ ] convert go into lambda
+- [ ] write go SDK code to fetch data at runtime
 - [ ] secrets management
-- [ ] DB (SQL / nosql) schema
+- [x] DB (SQL / nosql) schema
 - [x] iterate over multiple channels to post in
