@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -58,16 +57,16 @@ var localChannels = []DiscordChannel{
 func getDiscordSession() (*discordgo.Session, error) {
 	DISCORD_BOT_TOKEN := ""
 	if DISCORD_BOT_TOKEN = os.Getenv("DISCORD_BOT_TOKEN"); DISCORD_BOT_TOKEN == "" {
-		return nil, errors.New("Error retrieving DISCORD_BOT_TOKEN environment variable. Is it set?")
+		return nil, fmt.Errorf("error retrieving DISCORD_BOT_TOKEN environment variable. is it set?")
 	}
 
 	discord, err := discordgo.New("Bot " + DISCORD_BOT_TOKEN)
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("Error creating Discord session:\n  %s", err))
+		return nil, fmt.Errorf("error creating Discord session:\n  %s", err)
 	}
 
 	if err = discord.Open(); err != nil {
-		return nil, errors.New(fmt.Sprintf("Error opening Discord session:\n  %s", err))
+		return nil, fmt.Errorf("error opening Discord session:\n  %s", err)
 	}
 
 	return discord, nil
@@ -82,7 +81,7 @@ func getDDBSession() (*session.Session, error) {
 	})
 
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("Error creating AWS session: \n%s", err))
+		return nil, fmt.Errorf("error creating AWS session: \n%s", err)
 	}
 
 	return sess, nil
@@ -107,20 +106,20 @@ func fetchUser(sess *session.Session, userID int) (*dynamodb.GetItemOutput, erro
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
 			case dynamodb.ErrCodeProvisionedThroughputExceededException:
-				return nil, errors.New(fmt.Sprintln(dynamodb.ErrCodeProvisionedThroughputExceededException, aerr.Error()))
+				return nil, fmt.Errorf("%s %s", dynamodb.ErrCodeProvisionedThroughputExceededException, aerr.Error())
 			case dynamodb.ErrCodeResourceNotFoundException:
-				return nil, errors.New(fmt.Sprintln(dynamodb.ErrCodeResourceNotFoundException, aerr.Error()))
+				return nil, fmt.Errorf("%s %s", dynamodb.ErrCodeResourceNotFoundException, aerr.Error())
 			case dynamodb.ErrCodeRequestLimitExceeded:
-				return nil, errors.New(fmt.Sprintln(dynamodb.ErrCodeRequestLimitExceeded, aerr.Error()))
+				return nil, fmt.Errorf("%s %s", dynamodb.ErrCodeRequestLimitExceeded, aerr.Error())
 			case dynamodb.ErrCodeInternalServerError:
-				return nil, errors.New(fmt.Sprintln(dynamodb.ErrCodeInternalServerError, aerr.Error()))
+				return nil, fmt.Errorf("%s %s", dynamodb.ErrCodeInternalServerError, aerr.Error())
 			default:
-				return nil, errors.New(fmt.Sprintln(aerr.Error()))
+				return nil, fmt.Errorf("%s", aerr.Error())
 			}
 		} else {
 			// Print the error, cast err to awserr.Error to get the Code and
 			// Message from an error.
-			return nil, errors.New(fmt.Sprintln(err.Error()))
+			return nil, fmt.Errorf(err.Error())
 		}
 	}
 	return user, nil
@@ -133,21 +132,21 @@ func commentNewPosts(sess *discordgo.Session, wg *sync.WaitGroup, feed Feed, cha
 	parsedFeed, err := fp.ParseURL(feed.Url)
 
 	if err != nil {
-		fmt.Printf("Unable to parse URL %s for feed %s: %s", feed.Url, feed.Title, err)
+		fmt.Printf("unable to parse URL %s for feed %s: %s", feed.Url, feed.Title, err)
 		return
 	}
 
 	lastChecked, err := time.Parse(LAST_CHECKED_TIME_FORMAT, LAST_CHECKED_TIME)
 
 	if err != nil {
-		fmt.Printf("Unable to parse last_checked datetime string: %s", err)
+		fmt.Printf("unable to parse last_checked datetime string: %s", err)
 		return
 	}
 
 	for _, item := range parsedFeed.Items {
 		publishedTime, err := time.Parse(feed.TimeFormat, item.Published)
 		if err != nil {
-			fmt.Printf("Unable to parse published_time datetime string for post %s in blog %s: %s", item.Title, feed.Title, err)
+			fmt.Printf("unable to parse published_time datetime string for post %s in blog %s: %s", item.Title, feed.Title, err)
 			return
 		}
 
@@ -155,7 +154,7 @@ func commentNewPosts(sess *discordgo.Session, wg *sync.WaitGroup, feed Feed, cha
 			var message string = fmt.Sprintf("**%s**\n%s\n", item.Title, item.Link)
 			for _, channel := range channelList {
 				if _, err := sess.ChannelMessageSend(strconv.Itoa(channel.ChannelID), message); err != nil {
-					fmt.Printf("Error sending message: %s", err)
+					fmt.Printf("error sending message: %s", err)
 					return
 				}
 			}
