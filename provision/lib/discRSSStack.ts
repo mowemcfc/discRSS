@@ -1,4 +1,4 @@
-import { Stack, StackProps } from 'aws-cdk-lib';
+import { RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as cr from 'aws-cdk-lib/custom-resources';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb'
@@ -14,6 +14,8 @@ export class DiscRssStack extends Stack {
         type: dynamodb.AttributeType.NUMBER
       }
     })
+
+    userTable.applyRemovalPolicy(RemovalPolicy.DESTROY)
     
     new cr.AwsCustomResource(this, 'initTable', {
       onCreate: {
@@ -72,5 +74,6 @@ export class DiscRssStack extends Stack {
         type: dynamodb.AttributeType.NUMBER
       }
     })
+    appconfigTable.applyRemovalPolicy(RemovalPolicy.DESTROY)
   }
 }

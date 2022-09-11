@@ -4,7 +4,7 @@
 ## TODO
 
 - [ ] cdk stack to host app on lambda
-- [ ] make table retention policy DESTROY
+- [x] make table retention policy DESTROY
 - [ ] convert go into lambda
 - [ ] write go SDK code to fetch data at runtime
 - [ ] secrets management
