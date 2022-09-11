@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -54,13 +55,40 @@ var localChannels = []DiscordChannel{
 	{ChannelID: 958948046606053406, ChannelName: "rss", ServerName: "klnkn (pers)"},
 }
 
-func fetchLocalFeeds() any {
-	sess := session.Must(session.NewSessionWithOptions(session.Options{
+func getDiscordSession() (*discordgo.Session, error) {
+	DISCORD_BOT_TOKEN := ""
+	if DISCORD_BOT_TOKEN = os.Getenv("DISCORD_BOT_TOKEN"); DISCORD_BOT_TOKEN == "" {
+		return nil, errors.New("Error retrieving DISCORD_BOT_TOKEN environment variable. Is it set?")
+	}
+
+	discord, err := discordgo.New("Bot " + DISCORD_BOT_TOKEN)
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("Error creating Discord session:\n  %s", err))
+	}
+
+	if err = discord.Open(); err != nil {
+		return nil, errors.New(fmt.Sprintf("Error opening Discord session:\n  %s", err))
+	}
+
+	return discord, nil
+}
+
+func getDDBSession() (*session.Session, error) {
+	sess, err := session.NewSessionWithOptions(session.Options{
 		Profile: "carter-dev",
 		Config: aws.Config{
 			Region: aws.String("ap-southeast-2"),
 		},
-	}))
+	})
+
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("Error creating AWS session: \n%s", err))
+	}
+
+	return sess, nil
+}
+
+func fetchUser(sess *session.Session, userID int) (*dynamodb.GetItemOutput, error) {
 
 	ddb := dynamodb.New(sess)
 	var tableName string = "discRSS-UserRecords"
@@ -68,7 +96,7 @@ func fetchLocalFeeds() any {
 	getUserInput := &dynamodb.GetItemInput{
 		Key: map[string]*dynamodb.AttributeValue{
 			"userID": {
-				N: aws.String("1"),
+				N: aws.String(strconv.Itoa(userID)),
 			},
 		},
 		TableName: aws.String(tableName),
@@ -79,23 +107,23 @@ func fetchLocalFeeds() any {
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
 			case dynamodb.ErrCodeProvisionedThroughputExceededException:
-				fmt.Println(dynamodb.ErrCodeProvisionedThroughputExceededException, aerr.Error())
+				return nil, errors.New(fmt.Sprintln(dynamodb.ErrCodeProvisionedThroughputExceededException, aerr.Error()))
 			case dynamodb.ErrCodeResourceNotFoundException:
-				fmt.Println(dynamodb.ErrCodeResourceNotFoundException, aerr.Error())
+				return nil, errors.New(fmt.Sprintln(dynamodb.ErrCodeResourceNotFoundException, aerr.Error()))
 			case dynamodb.ErrCodeRequestLimitExceeded:
-				fmt.Println(dynamodb.ErrCodeRequestLimitExceeded, aerr.Error())
+				return nil, errors.New(fmt.Sprintln(dynamodb.ErrCodeRequestLimitExceeded, aerr.Error()))
 			case dynamodb.ErrCodeInternalServerError:
-				fmt.Println(dynamodb.ErrCodeInternalServerError, aerr.Error())
+				return nil, errors.New(fmt.Sprintln(dynamodb.ErrCodeInternalServerError, aerr.Error()))
 			default:
-				fmt.Println(aerr.Error())
+				return nil, errors.New(fmt.Sprintln(aerr.Error()))
 			}
 		} else {
 			// Print the error, cast err to awserr.Error to get the Code and
 			// Message from an error.
-			fmt.Println(err.Error())
+			return nil, errors.New(fmt.Sprintln(err.Error()))
 		}
 	}
-	return user
+	return user, nil
 }
 
 func commentNewPosts(sess *discordgo.Session, wg *sync.WaitGroup, feed Feed, channelList []DiscordChannel) {
@@ -138,15 +166,15 @@ func commentNewPosts(sess *discordgo.Session, wg *sync.WaitGroup, feed Feed, cha
 
 func main() {
 
-	discord, err := discordgo.New("Bot " + os.Getenv("DISCORD_BOT_TOKEN"))
-
+	discord, err := getDiscordSession()
 	if err != nil {
-		fmt.Printf("Error creating Discord session:\n  %s", err)
+		fmt.Println(err)
 		return
 	}
 
-	if err = discord.Open(); err != nil {
-		fmt.Printf("Error opening discord session\n  %s", err)
+	ddbSession, err := getDDBSession()
+	if err != nil {
+		fmt.Println(err)
 		return
 	}
 
@@ -158,7 +186,12 @@ func main() {
 		localChannels,
 	}
 
-	fetchLocalFeeds()
+	user, err := fetchUser(ddbSession, 1)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(user)
 
 	// Initialise a WaitGroup that will spawn a goroutine per subscribed RSS feed to post all new content
 	var wg sync.WaitGroup
