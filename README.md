@@ -4,7 +4,7 @@
 ## TODO
 
 - [ ] cdk stack to host app on lambda
-  - [ ] DDB tables
+  - [x] DDB tables
   - [ ] lambda
   - [ ] lambda endpoints
 - [x] make table retention policy DESTROY
