@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/bwmarrin/discordgo"
 	"github.com/mmcdole/gofeed"
 )
@@ -39,20 +40,6 @@ type DiscordChannel struct {
 
 const LAST_CHECKED_TIME = "2022-08-30T00:00:00+10:00"
 const LAST_CHECKED_TIME_FORMAT = time.RFC3339
-const currentUser = "mowemcfc"
-
-var localFeeds = []Feed{
-	{FeedID: 1, Title: "The Future Does Not Fit In The Containers Of The Past", Url: "https://rishad.substack.com/feed", TimeFormat: time.RFC1123},
-	{FeedID: 2, Title: "Dan Luu", Url: "https://danluu.com/atom.xml", TimeFormat: time.RFC1123Z},
-	{FeedID: 3, Title: "Scattered Thoughts", Url: "https://www.scattered-thoughts.net/feed", TimeFormat: time.RFC3339},
-	{FeedID: 4, Title: "Ben Kuhn", Url: "https://www.benkuhn.net/rss", TimeFormat: time.RFC3339},
-	{FeedID: 5, Title: "Carefree Wandering", Url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCnEuIogVV2Mv6Q1a3nHIRsQ", TimeFormat: time.RFC3339},
-}
-
-var localChannels = []DiscordChannel{
-	{ChannelID: 985831956203851786, ChannelName: "mowes mate", ServerName: "mines"},
-	{ChannelID: 958948046606053406, ChannelName: "rss", ServerName: "klnkn (pers)"},
-}
 
 func getDiscordSession() (*discordgo.Session, error) {
 	DISCORD_BOT_TOKEN := ""
@@ -87,7 +74,7 @@ func getDDBSession() (*session.Session, error) {
 	return sess, nil
 }
 
-func fetchUser(sess *session.Session, userID int) (*dynamodb.GetItemOutput, error) {
+func fetchUser(sess *session.Session, userID int) (*UserAccount, error) {
 
 	ddb := dynamodb.New(sess)
 	var tableName string = "discRSS-UserRecords"
@@ -122,7 +109,14 @@ func fetchUser(sess *session.Session, userID int) (*dynamodb.GetItemOutput, erro
 			return nil, fmt.Errorf(err.Error())
 		}
 	}
-	return user, nil
+
+	unmarshalled := UserAccount{}
+	err = dynamodbattribute.UnmarshalMap(user.Item, &unmarshalled)
+	if err != nil {
+		return nil, fmt.Errorf("error unmarshalling returned user item: %s", err)
+	}
+
+	return &unmarshalled, nil
 }
 
 func commentNewPosts(sess *discordgo.Session, wg *sync.WaitGroup, feed Feed, channelList []DiscordChannel) {
@@ -177,26 +171,17 @@ func main() {
 		return
 	}
 
-	UserAccounts = make(map[string]UserAccount)
-	UserAccounts[currentUser] = UserAccount{
-		1,
-		currentUser,
-		localFeeds,
-		localChannels,
-	}
-
 	user, err := fetchUser(ddbSession, 1)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	fmt.Println(user)
 
 	// Initialise a WaitGroup that will spawn a goroutine per subscribed RSS feed to post all new content
 	var wg sync.WaitGroup
-	for _, feed := range UserAccounts[currentUser].FeedList {
+	for _, feed := range user.FeedList {
 		wg.Add(1)
-		go commentNewPosts(discord, &wg, feed, UserAccounts[currentUser].ChannelList)
+		go commentNewPosts(discord, &wg, feed, user.ChannelList)
 	}
 
 	wg.Wait()
