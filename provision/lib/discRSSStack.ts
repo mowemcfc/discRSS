@@ -17,7 +17,7 @@ export class DiscRssStack extends Stack {
 
     userTable.applyRemovalPolicy(RemovalPolicy.DESTROY)
     
-    new cr.AwsCustomResource(this, 'initTable', {
+    const userTableInit = new cr.AwsCustomResource(this, 'initTable', {
       onCreate: {
         service: 'DynamoDB',
         action: 'putItem',
@@ -32,7 +32,7 @@ export class DiscRssStack extends Stack {
                     feedID: { N: "1" }, 
                     title: { S: "The Future Does Not Fit In The Containers Of The Past" },
                     url: {S: "https://rishad.substack.com/feed" }, 
-                    timeFormat: { S: "2006-01-02T15:04:05Z07:00" },
+                    timeFormat: { S: "Mon, 02 Jan 2006 15:04:05 MST" },
                   }
                 },
                 {
