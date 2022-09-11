@@ -68,7 +68,7 @@ export class DiscRssStack extends Stack {
     });
 
     const appconfigTable = new dynamodb.Table(this, 'AppconfigTable', {
-      tableName: 'discRSS-appConfigs',
+      tableName: 'discRSS-AppConfigs',
       partitionKey: {
         name: 'configID',
         type: dynamodb.AttributeType.NUMBER
