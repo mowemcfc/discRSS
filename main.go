@@ -7,6 +7,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/bwmarrin/discordgo"
 	"github.com/mmcdole/gofeed"
 )
@@ -48,6 +52,50 @@ var localFeeds = []Feed{
 var localChannels = []DiscordChannel{
 	{ChannelID: 985831956203851786, ChannelName: "mowes mate", ServerName: "mines"},
 	{ChannelID: 958948046606053406, ChannelName: "rss", ServerName: "klnkn (pers)"},
+}
+
+func fetchLocalFeeds() any {
+	sess := session.Must(session.NewSessionWithOptions(session.Options{
+		Profile: "carter-dev",
+		Config: aws.Config{
+			Region: aws.String("ap-southeast-2"),
+		},
+	}))
+
+	ddb := dynamodb.New(sess)
+	var tableName string = "discRSS-UserRecords"
+
+	getUserInput := &dynamodb.GetItemInput{
+		Key: map[string]*dynamodb.AttributeValue{
+			"userID": {
+				N: aws.String("1"),
+			},
+		},
+		TableName: aws.String(tableName),
+	}
+
+	user, err := ddb.GetItem(getUserInput)
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case dynamodb.ErrCodeProvisionedThroughputExceededException:
+				fmt.Println(dynamodb.ErrCodeProvisionedThroughputExceededException, aerr.Error())
+			case dynamodb.ErrCodeResourceNotFoundException:
+				fmt.Println(dynamodb.ErrCodeResourceNotFoundException, aerr.Error())
+			case dynamodb.ErrCodeRequestLimitExceeded:
+				fmt.Println(dynamodb.ErrCodeRequestLimitExceeded, aerr.Error())
+			case dynamodb.ErrCodeInternalServerError:
+				fmt.Println(dynamodb.ErrCodeInternalServerError, aerr.Error())
+			default:
+				fmt.Println(aerr.Error())
+			}
+		} else {
+			// Print the error, cast err to awserr.Error to get the Code and
+			// Message from an error.
+			fmt.Println(err.Error())
+		}
+	}
+	return user
 }
 
 func commentNewPosts(sess *discordgo.Session, wg *sync.WaitGroup, feed Feed, channelList []DiscordChannel) {
@@ -109,6 +157,8 @@ func main() {
 		localFeeds,
 		localChannels,
 	}
+
+	fetchLocalFeeds()
 
 	// Initialise a WaitGroup that will spawn a goroutine per subscribed RSS feed to post all new content
 	var wg sync.WaitGroup
