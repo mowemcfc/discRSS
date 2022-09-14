@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"strconv"
 	"sync"
 	"time"
@@ -12,6 +11,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
+	"github.com/aws/aws-sdk-go/service/secretsmanager"
+
 	"github.com/bwmarrin/discordgo"
 	"github.com/mmcdole/gofeed"
 )
@@ -41,13 +42,12 @@ type DiscordChannel struct {
 const LAST_CHECKED_TIME = "2022-08-30T00:00:00+10:00"
 const LAST_CHECKED_TIME_FORMAT = time.RFC3339
 
-func getDiscordSession() (*discordgo.Session, error) {
-	DISCORD_BOT_TOKEN := ""
-	if DISCORD_BOT_TOKEN = os.Getenv("DISCORD_BOT_TOKEN"); DISCORD_BOT_TOKEN == "" {
-		return nil, fmt.Errorf("error retrieving DISCORD_BOT_TOKEN environment variable. is it set?")
+func getDiscordSession(token string) (*discordgo.Session, error) {
+	if token == "" {
+		return nil, fmt.Errorf("discord token is empty. has it been properly retrieved from AWS?")
 	}
 
-	discord, err := discordgo.New("Bot " + DISCORD_BOT_TOKEN)
+	discord, err := discordgo.New("Bot " + token)
 	if err != nil {
 		return nil, fmt.Errorf("error creating Discord session:\n  %s", err)
 	}
@@ -59,7 +59,7 @@ func getDiscordSession() (*discordgo.Session, error) {
 	return discord, nil
 }
 
-func getDDBSession() (*session.Session, error) {
+func getAWSSession() (*session.Session, error) {
 	sess, err := session.NewSessionWithOptions(session.Options{
 		Profile: "carter-dev",
 		Config: aws.Config{
@@ -157,21 +157,59 @@ func commentNewPosts(sess *discordgo.Session, wg *sync.WaitGroup, feed Feed, cha
 
 }
 
-func main() {
+func fetchDiscordToken(sess *session.Session) (string, error) {
+	scm := secretsmanager.New(sess)
 
-	discord, err := getDiscordSession()
+	input := &secretsmanager.GetSecretValueInput{
+		SecretId: aws.String("discRSS/discord-bot-secret"),
+	}
+	result, err := scm.GetSecretValue(input)
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case secretsmanager.ErrCodeResourceNotFoundException:
+				return "", fmt.Errorf("%s %s", secretsmanager.ErrCodeResourceNotFoundException, aerr.Error())
+			case secretsmanager.ErrCodeInvalidParameterException:
+				return "", fmt.Errorf("%s %s", secretsmanager.ErrCodeInvalidParameterException, aerr.Error())
+			case secretsmanager.ErrCodeInvalidRequestException:
+				return "", fmt.Errorf("%s %s", secretsmanager.ErrCodeInvalidRequestException, aerr.Error())
+			case secretsmanager.ErrCodeDecryptionFailure:
+				return "", fmt.Errorf("%s %s", secretsmanager.ErrCodeDecryptionFailure, aerr.Error())
+			case secretsmanager.ErrCodeInternalServiceError:
+				return "", fmt.Errorf("%s %s", secretsmanager.ErrCodeInternalServiceError, aerr.Error())
+			default:
+				return "", fmt.Errorf("%s", aerr.Error())
+			}
+		} else {
+			return "", fmt.Errorf(fmt.Sprintln(err.Error()))
+		}
+	}
+
+	return *result.SecretString, nil
+}
+
+//func start(ctx context.Context) {
+func start() {
+
+	aws, err := getAWSSession()
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	ddbSession, err := getDDBSession()
+	discordToken, err := fetchDiscordToken(aws)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	user, err := fetchUser(ddbSession, 1)
+	discord, err := getDiscordSession(discordToken)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	user, err := fetchUser(aws, 1)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -185,4 +223,9 @@ func main() {
 	}
 
 	wg.Wait()
+}
+
+func main() {
+	start()
+	//lambda.Start(start)
 }
