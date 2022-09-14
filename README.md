@@ -13,7 +13,7 @@
   - [x] aws
   - [x] discord
 - [x] write go SDK code to fetch data at runtime
-- [ ] secrets management
+- [x] secrets management
 - [ ] deal with onUpdate for AWS CR's
 - [x] DB (SQL / nosql) schema
 - [x] iterate over multiple channels to post in
