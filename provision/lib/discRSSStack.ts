@@ -2,6 +2,9 @@ import { RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as cr from 'aws-cdk-lib/custom-resources';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb'
+import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager'
+import * as fs from 'fs';
+import * as path from 'path';
 
 export class DiscRssStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -75,5 +78,26 @@ export class DiscRssStack extends Stack {
       }
     })
     appconfigTable.applyRemovalPolicy(RemovalPolicy.DESTROY)
+
+    const discordBotSecret = new secretsmanager.Secret(this, 'DiscordBotSecret', {
+      secretName: 'discRSS/discord-bot-secret',
+    })
+
+    const putDiscordBotSecretAction = {
+        service: 'SecretsManager',
+        action: 'putSecretValue',
+        parameters: {
+          SecretId: discordBotSecret.secretName,
+          SecretString: fs.readFileSync(path.join(__dirname, '../local/discord_token.txt'), { encoding: 'utf-8' })
+        },
+        physicalResourceId: cr.PhysicalResourceId.of(discordBotSecret.secretName + '_initialisation')
+    }
+
+
+    const discordBotTokenUpdateCr = new cr.AwsCustomResource(this, 'DiscordBotSecretUpdate', {
+      onCreate: putDiscordBotSecretAction,
+      onUpdate: putDiscordBotSecretAction,
+      policy: cr.AwsCustomResourcePolicy.fromSdkCalls({ resources: cr.AwsCustomResourcePolicy.ANY_RESOURCE }),
+    }) 
   }
 }
