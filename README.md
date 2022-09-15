@@ -21,10 +21,10 @@
 - [x] iterate over multiple channels to post in
 - [ ] make aws session global
 - [ ] init lastCheckedTime in CDK as time.now()
-- [ ] eventbridge schedule for lambda
-- [ ] update lastChecked from code
+- [x] eventbridge schedule for lambda
+- [x] update lastChecked from code
 - [ ] logging
-  - [ ] basic
+  - [x] basic
   - [ ] structured
 - [ ] tracing
 - [ ] frontend
