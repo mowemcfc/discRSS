@@ -5,20 +5,24 @@
 
 - [ ] cdk stack to host app on lambda
   - [x] DDB tables
-  - [ ] lambda
+  - [x] lambda
   - [ ] lambda endpoints
 - [x] make table retention policy DESTROY
-- [ ] convert go into lambda
+- [x] convert go into lambda
 - [x] start sessions in separate functions
   - [x] aws
   - [x] discord
 - [x] write go SDK code to fetch data at runtime
 - [x] secrets management
-- [ ] deal with onUpdate for AWS CR's
+- [x] deal with onUpdate for AWS CR's
   - [x] discord secret
-  - [ ] ddb table
+  - [x] ddb table
 - [x] DB (SQL / nosql) schema
 - [x] iterate over multiple channels to post in
+- [ ] logging
+ - [ ] basic
+ - [ ] structured
+- [ ] tracing
 - [ ] frontend
   - [ ] hardcode userid=1
   - [ ] display feeds via ddb fetch
