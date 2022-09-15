@@ -82,17 +82,35 @@ export class DiscRssStack extends Stack {
       policy: cr.AwsCustomResourcePolicy.fromSdkCalls({ resources: cr.AwsCustomResourcePolicy.ANY_RESOURCE }),
     });
 
-    const appconfigTable = new dynamodb.Table(this, 'AppconfigTable', {
+    const appConfigTable = new dynamodb.Table(this, 'AppconfigTable', {
       tableName: 'discRSS-AppConfigs',
       partitionKey: {
-        name: 'configID',
+        name: 'appName',
         type: dynamodb.AttributeType.NUMBER
       }
     })
-    appconfigTable.applyRemovalPolicy(RemovalPolicy.DESTROY)
-    appconfigTable.grantReadWriteData(discRSSLambda.role!.grantPrincipal)
+    appConfigTable.applyRemovalPolicy(RemovalPolicy.DESTROY)
+    appConfigTable.grantReadWriteData(discRSSLambda.role!.grantPrincipal)
 
-    
+    const appConfigTableInitAction: cr.AwsSdkCall = {
+      service: 'DynamoDB',
+      action: 'putItem',
+      parameters: {
+        TableName: appConfigTable.tableName,
+        Item: { 
+          appName: { S: "discRSS" },
+          lastCheckedTime: { S: "2022-08-30T00:00:00+10:00" }, 
+          lastCheckedTimeFormat: { S: "2006-01-02T15:04:05Z07:00" }
+        }
+      },
+      physicalResourceId: cr.PhysicalResourceId.of(appConfigTable.tableName + '_initialization')
+    }
+
+    const appConfigTableInit = new cr.AwsCustomResource(this, 'initAppConfigTable', {
+      onCreate: appConfigTableInitAction,
+      onUpdate: appConfigTableInitAction,
+      policy: cr.AwsCustomResourcePolicy.fromSdkCalls({ resources: cr.AwsCustomResourcePolicy.ANY_RESOURCE })
+    })
 
     const discordBotSecret = new secretsmanager.Secret(this, 'DiscordBotSecret', {
       secretName: 'discRSS/discord-bot-secret',
