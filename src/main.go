@@ -49,8 +49,12 @@ var discRssConfig *AppConfig
 var secretsmanagerSvc *secretsmanager.SecretsManager
 var ddbSvc *dynamodb.DynamoDB
 
+const APP_NAME string = "discRSS"
+const APP_CONFIG_TABLE_NAME string = "discRSS-AppConfigs"
+const USER_TABLE_NAME string = "discRSS-UserRecords"
+const BOT_TOKEN_SECRET_NAME string = "discRSS/discord-bot-secret"
+
 func fetchAppConfig(sess *session.Session, appName string) (*AppConfig, error) {
-	var tableName string = "discRSS-AppConfigs"
 
 	getAppConfigInput := &dynamodb.GetItemInput{
 		Key: map[string]*dynamodb.AttributeValue{
@@ -58,7 +62,7 @@ func fetchAppConfig(sess *session.Session, appName string) (*AppConfig, error) {
 				S: aws.String(appName),
 			},
 		},
-		TableName: aws.String(tableName),
+		TableName: aws.String(APP_CONFIG_TABLE_NAME),
 	}
 
 	config, err := ddbSvc.GetItem(getAppConfigInput)
@@ -93,10 +97,9 @@ func fetchAppConfig(sess *session.Session, appName string) (*AppConfig, error) {
 }
 
 func fetchDiscordToken(sess *session.Session) (string, error) {
-	botTokenSecretName := "discRSS/discord-bot-secret"
 
 	input := &secretsmanager.GetSecretValueInput{
-		SecretId: aws.String(botTokenSecretName),
+		SecretId: aws.String(BOT_TOKEN_SECRET_NAME),
 	}
 
 	result, err := secretsmanagerSvc.GetSecretValue(input)
@@ -128,15 +131,13 @@ func fetchDiscordToken(sess *session.Session) (string, error) {
 
 func fetchUser(sess *session.Session, userID int) (*UserAccount, error) {
 
-	var tableName string = "discRSS-UserRecords"
-
 	getUserInput := &dynamodb.GetItemInput{
 		Key: map[string]*dynamodb.AttributeValue{
 			"userID": {
 				N: aws.String(strconv.Itoa(userID)),
 			},
 		},
-		TableName: aws.String(tableName),
+		TableName: aws.String(USER_TABLE_NAME),
 	}
 
 	user, err := ddbSvc.GetItem(getUserInput)
@@ -168,6 +169,35 @@ func fetchUser(sess *session.Session, userID int) (*UserAccount, error) {
 	}
 
 	return &unmarshalled, nil
+}
+
+func updateLastCheckedTime(sess *session.Session, t time.Time) error {
+	formatted := t.Format(discRssConfig.LastCheckedTimeFormat)
+
+	updateTimeInput := &dynamodb.UpdateItemInput{
+		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
+			":t": {
+				S: aws.String(formatted),
+			},
+		},
+		Key: map[string]*dynamodb.AttributeValue{
+			"appName": {
+				S: aws.String(discRssConfig.AppName),
+			},
+		},
+		ReturnValues:     aws.String("UPDATED_NEW"),
+		UpdateExpression: aws.String("set lastCheckedTime = :t"),
+		TableName:        aws.String(APP_CONFIG_TABLE_NAME),
+	}
+
+	_, err := ddbSvc.UpdateItem(updateTimeInput)
+	if err != nil {
+		return fmt.Errorf("error updating last checked time: %s", err)
+	}
+
+	fmt.Printf("successfully updated last checked time: %s\n", formatted)
+
+	return nil
 }
 
 func commentNewPosts(sess *discordgo.Session, wg *sync.WaitGroup, feed Feed, channelList []DiscordChannel) {
@@ -252,8 +282,12 @@ func start() {
 		wg.Add(1)
 		go commentNewPosts(discord, &wg, feed, user.ChannelList)
 	}
-
 	wg.Wait()
+
+	if err := updateLastCheckedTime(aws, time.Now()); err != nil {
+		fmt.Println(err)
+		return
+	}
 }
 
 func main() {

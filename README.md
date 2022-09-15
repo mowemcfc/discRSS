@@ -19,6 +19,8 @@
   - [x] ddb table
 - [x] DB (SQL / nosql) schema
 - [x] iterate over multiple channels to post in
+- [ ] make aws session global
+- [ ] init lastCheckedTime in CDK as time.now()
 - [ ] eventbridge schedule for lambda
 - [ ] update lastChecked from code
 - [ ] logging
