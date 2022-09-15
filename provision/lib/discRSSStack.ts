@@ -4,6 +4,8 @@ import * as cr from 'aws-cdk-lib/custom-resources';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb'
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager'
 import * as lambda from 'aws-cdk-lib/aws-lambda'
+import * as eventbridge from 'aws-cdk-lib/aws-events'
+import * as eventtargets from 'aws-cdk-lib/aws-events-targets'
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -19,6 +21,14 @@ export class DiscRssStack extends Stack {
       handler: 'main',
       timeout: Duration.seconds(60)
     })
+
+    const lambdaScheduledExecution = new eventbridge.Rule(this, 'lambdaScheduledExecution', {
+      schedule: eventbridge.Schedule.cron({ minute: '0/1' })
+    })
+
+    lambdaScheduledExecution.addTarget(
+      new eventtargets.LambdaFunction(discRSSLambda, {})
+    )
 
     const userTable = new dynamodb.Table(this, 'UserTable', {
       tableName: 'discRSS-UserRecords',
