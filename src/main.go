@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -60,12 +61,7 @@ func getDiscordSession(token string) (*discordgo.Session, error) {
 }
 
 func getAWSSession() (*session.Session, error) {
-	sess, err := session.NewSessionWithOptions(session.Options{
-		Profile: "carter-dev",
-		Config: aws.Config{
-			Region: aws.String("ap-southeast-2"),
-		},
-	})
+	sess, err := session.NewSession()
 
 	if err != nil {
 		return nil, fmt.Errorf("error creating AWS session: \n%s", err)
@@ -226,6 +222,5 @@ func start() {
 }
 
 func main() {
-	start()
-	//lambda.Start(start)
+	lambda.Start(start)
 }

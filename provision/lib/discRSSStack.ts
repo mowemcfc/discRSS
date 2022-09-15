@@ -1,14 +1,24 @@
-import { RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
+import { Duration, RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as cr from 'aws-cdk-lib/custom-resources';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb'
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager'
+import * as lambda from 'aws-cdk-lib/aws-lambda'
 import * as fs from 'fs';
 import * as path from 'path';
 
 export class DiscRssStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
+
+    const discRSSLambda = new lambda.Function(this, 'DiscRSSLambda', {
+      functionName: 'discRSSLambda',
+      architecture: lambda.Architecture.X86_64,
+      runtime: lambda.Runtime.GO_1_X,
+      code: lambda.Code.fromAsset(path.join(__dirname, '../../src')),
+      handler: 'main',
+      timeout: Duration.seconds(60)
+    })
 
     const userTable = new dynamodb.Table(this, 'UserTable', {
       tableName: 'discRSS-UserRecords',
@@ -17,8 +27,8 @@ export class DiscRssStack extends Stack {
         type: dynamodb.AttributeType.NUMBER
       }
     })
-
     userTable.applyRemovalPolicy(RemovalPolicy.DESTROY)
+    userTable.grantReadWriteData(discRSSLambda.role!.grantPrincipal)
     
     const userTableInit = new cr.AwsCustomResource(this, 'initTable', {
       onCreate: {
@@ -78,10 +88,14 @@ export class DiscRssStack extends Stack {
       }
     })
     appconfigTable.applyRemovalPolicy(RemovalPolicy.DESTROY)
+    appconfigTable.grantReadWriteData(discRSSLambda.role!.grantPrincipal)
+
+    
 
     const discordBotSecret = new secretsmanager.Secret(this, 'DiscordBotSecret', {
       secretName: 'discRSS/discord-bot-secret',
     })
+    discordBotSecret.grantRead(discRSSLambda.role!.grantPrincipal)
 
     const putDiscordBotSecretAction = {
         service: 'SecretsManager',
@@ -92,7 +106,6 @@ export class DiscRssStack extends Stack {
         },
         physicalResourceId: cr.PhysicalResourceId.of(discordBotSecret.secretName + '_initialisation')
     }
-
 
     const discordBotTokenUpdateCr = new cr.AwsCustomResource(this, 'DiscordBotSecretUpdate', {
       onCreate: putDiscordBotSecretAction,
