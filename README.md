@@ -19,9 +19,11 @@
   - [x] ddb table
 - [x] DB (SQL / nosql) schema
 - [x] iterate over multiple channels to post in
+- [ ] eventbridge schedule for lambda
+- [ ] update lastChecked from code
 - [ ] logging
- - [ ] basic
- - [ ] structured
+  - [ ] basic
+  - [ ] structured
 - [ ] tracing
 - [ ] frontend
   - [ ] hardcode userid=1
