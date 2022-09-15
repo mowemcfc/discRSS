@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
+	"github.com/aws/aws-sdk-go/service/secretsmanager"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/mmcdole/gofeed"
@@ -41,6 +42,39 @@ type DiscordChannel struct {
 
 const LAST_CHECKED_TIME = "2022-08-30T00:00:00+10:00"
 const LAST_CHECKED_TIME_FORMAT = time.RFC3339
+
+func fetchDiscordToken(sess *session.Session) (string, error) {
+	scm := secretsmanager.New(sess)
+
+	input := &secretsmanager.GetSecretValueInput{
+		SecretId: aws.String("discRSS/discord-bot-secret"),
+	}
+	result, err := scm.GetSecretValue(input)
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case secretsmanager.ErrCodeResourceNotFoundException:
+				return "", fmt.Errorf("%s %s", secretsmanager.ErrCodeResourceNotFoundException, aerr.Error())
+			case secretsmanager.ErrCodeInvalidParameterException:
+				return "", fmt.Errorf("%s %s", secretsmanager.ErrCodeInvalidParameterException, aerr.Error())
+			case secretsmanager.ErrCodeInvalidRequestException:
+				return "", fmt.Errorf("%s %s", secretsmanager.ErrCodeInvalidRequestException, aerr.Error())
+			case secretsmanager.ErrCodeDecryptionFailure:
+				return "", fmt.Errorf("%s %s", secretsmanager.ErrCodeDecryptionFailure, aerr.Error())
+			case secretsmanager.ErrCodeInternalServiceError:
+				return "", fmt.Errorf("%s %s", secretsmanager.ErrCodeInternalServiceError, aerr.Error())
+			default:
+				return "", fmt.Errorf("%s", aerr.Error())
+			}
+		} else {
+			return "", fmt.Errorf(fmt.Sprintln(err.Error()))
+		}
+	}
+
+	fmt.Println("successfully fetched discord token")
+
+	return *result.SecretString, nil
+}
 
 func fetchUser(sess *session.Session, userID int) (*UserAccount, error) {
 
@@ -123,7 +157,6 @@ func commentNewPosts(sess *discordgo.Session, wg *sync.WaitGroup, feed Feed, cha
 			}
 		}
 	}
-
 }
 
 //func start(ctx context.Context) {

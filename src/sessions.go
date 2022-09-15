@@ -3,10 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -39,37 +36,4 @@ func getAWSSession() (*session.Session, error) {
 	fmt.Println("successfully opened AWS session")
 
 	return sess, nil
-}
-
-func fetchDiscordToken(sess *session.Session) (string, error) {
-	scm := secretsmanager.New(sess)
-
-	input := &secretsmanager.GetSecretValueInput{
-		SecretId: aws.String("discRSS/discord-bot-secret"),
-	}
-	result, err := scm.GetSecretValue(input)
-	if err != nil {
-		if aerr, ok := err.(awserr.Error); ok {
-			switch aerr.Code() {
-			case secretsmanager.ErrCodeResourceNotFoundException:
-				return "", fmt.Errorf("%s %s", secretsmanager.ErrCodeResourceNotFoundException, aerr.Error())
-			case secretsmanager.ErrCodeInvalidParameterException:
-				return "", fmt.Errorf("%s %s", secretsmanager.ErrCodeInvalidParameterException, aerr.Error())
-			case secretsmanager.ErrCodeInvalidRequestException:
-				return "", fmt.Errorf("%s %s", secretsmanager.ErrCodeInvalidRequestException, aerr.Error())
-			case secretsmanager.ErrCodeDecryptionFailure:
-				return "", fmt.Errorf("%s %s", secretsmanager.ErrCodeDecryptionFailure, aerr.Error())
-			case secretsmanager.ErrCodeInternalServiceError:
-				return "", fmt.Errorf("%s %s", secretsmanager.ErrCodeInternalServiceError, aerr.Error())
-			default:
-				return "", fmt.Errorf("%s", aerr.Error())
-			}
-		} else {
-			return "", fmt.Errorf(fmt.Sprintln(err.Error()))
-		}
-	}
-
-	fmt.Println("successfully fetched discord token")
-
-	return *result.SecretString, nil
 }
