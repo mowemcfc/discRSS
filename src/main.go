@@ -25,8 +25,6 @@ type Feed struct {
 	TimeFormat string `json:"TimeFormat"`
 }
 
-var UserAccounts map[string]UserAccount
-
 type UserAccount struct {
 	UserID      int              `json:"userID"`
 	Username    string           `json:"username"`
@@ -40,16 +38,68 @@ type DiscordChannel struct {
 	ChannelID   int    `json:"channelID"`
 }
 
-const LAST_CHECKED_TIME = "2022-08-30T00:00:00+10:00"
-const LAST_CHECKED_TIME_FORMAT = time.RFC3339
+type AppConfig struct {
+	AppName               string `json:"appName"`
+	LastCheckedTime       string `json:"lastCheckedTime"`
+	LastCheckedTimeFormat string `json:"lastCheckedTimeFormat"`
+}
+
+var discRssConfig *AppConfig
+
+var secretsmanagerSvc *secretsmanager.SecretsManager
+var ddbSvc *dynamodb.DynamoDB
+
+func fetchAppConfig(sess *session.Session, appName string) (*AppConfig, error) {
+	var tableName string = "discRSS-AppConfigs"
+
+	getAppConfigInput := &dynamodb.GetItemInput{
+		Key: map[string]*dynamodb.AttributeValue{
+			"appName": {
+				S: aws.String(appName),
+			},
+		},
+		TableName: aws.String(tableName),
+	}
+
+	config, err := ddbSvc.GetItem(getAppConfigInput)
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case dynamodb.ErrCodeProvisionedThroughputExceededException:
+				return nil, fmt.Errorf("%s %s", dynamodb.ErrCodeProvisionedThroughputExceededException, aerr.Error())
+			case dynamodb.ErrCodeResourceNotFoundException:
+				return nil, fmt.Errorf("%s %s", dynamodb.ErrCodeResourceNotFoundException, aerr.Error())
+			case dynamodb.ErrCodeRequestLimitExceeded:
+				return nil, fmt.Errorf("%s %s", dynamodb.ErrCodeRequestLimitExceeded, aerr.Error())
+			case dynamodb.ErrCodeInternalServerError:
+				return nil, fmt.Errorf("%s %s", dynamodb.ErrCodeInternalServerError, aerr.Error())
+			default:
+				return nil, fmt.Errorf("%s", aerr.Error())
+			}
+		} else {
+			// Print the error, cast err to awserr.Error to get the Code and
+			// Message from an error.
+			return nil, fmt.Errorf(err.Error())
+		}
+	}
+
+	unmarshalled := AppConfig{}
+	err = dynamodbattribute.UnmarshalMap(config.Item, &unmarshalled)
+	if err != nil {
+		return nil, fmt.Errorf("error unmarshalling returned appconfig item: %s", err)
+	}
+
+	return &unmarshalled, nil
+}
 
 func fetchDiscordToken(sess *session.Session) (string, error) {
-	scm := secretsmanager.New(sess)
+	botTokenSecretName := "discRSS/discord-bot-secret"
 
 	input := &secretsmanager.GetSecretValueInput{
-		SecretId: aws.String("discRSS/discord-bot-secret"),
+		SecretId: aws.String(botTokenSecretName),
 	}
-	result, err := scm.GetSecretValue(input)
+
+	result, err := secretsmanagerSvc.GetSecretValue(input)
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
@@ -78,7 +128,6 @@ func fetchDiscordToken(sess *session.Session) (string, error) {
 
 func fetchUser(sess *session.Session, userID int) (*UserAccount, error) {
 
-	ddb := dynamodb.New(sess)
 	var tableName string = "discRSS-UserRecords"
 
 	getUserInput := &dynamodb.GetItemInput{
@@ -90,7 +139,7 @@ func fetchUser(sess *session.Session, userID int) (*UserAccount, error) {
 		TableName: aws.String(tableName),
 	}
 
-	user, err := ddb.GetItem(getUserInput)
+	user, err := ddbSvc.GetItem(getUserInput)
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
@@ -132,7 +181,7 @@ func commentNewPosts(sess *discordgo.Session, wg *sync.WaitGroup, feed Feed, cha
 		return
 	}
 
-	lastChecked, err := time.Parse(LAST_CHECKED_TIME_FORMAT, LAST_CHECKED_TIME)
+	lastChecked, err := time.Parse(discRssConfig.LastCheckedTimeFormat, discRssConfig.LastCheckedTime)
 
 	if err != nil {
 		fmt.Printf("unable to parse last_checked datetime string: %s", err)
@@ -163,6 +212,14 @@ func commentNewPosts(sess *discordgo.Session, wg *sync.WaitGroup, feed Feed, cha
 func start() {
 
 	aws, err := getAWSSession()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	secretsmanagerSvc = secretsmanager.New(aws)
+	ddbSvc = dynamodb.New(aws)
+
+	discRssConfig, err = fetchAppConfig(aws, "discRSS")
 	if err != nil {
 		fmt.Println(err)
 		return

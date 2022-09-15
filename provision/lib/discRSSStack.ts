@@ -82,11 +82,11 @@ export class DiscRssStack extends Stack {
       policy: cr.AwsCustomResourcePolicy.fromSdkCalls({ resources: cr.AwsCustomResourcePolicy.ANY_RESOURCE }),
     });
 
-    const appConfigTable = new dynamodb.Table(this, 'AppconfigTable', {
+    const appConfigTable = new dynamodb.Table(this, 'AppConfigTable', {
       tableName: 'discRSS-AppConfigs',
       partitionKey: {
         name: 'appName',
-        type: dynamodb.AttributeType.NUMBER
+        type: dynamodb.AttributeType.STRING
       }
     })
     appConfigTable.applyRemovalPolicy(RemovalPolicy.DESTROY)
