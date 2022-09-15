@@ -23,7 +23,7 @@ export class DiscRssStack extends Stack {
     })
 
     const lambdaScheduledExecution = new eventbridge.Rule(this, 'lambdaScheduledExecution', {
-      schedule: eventbridge.Schedule.cron({ minute: '0/1' })
+      schedule: eventbridge.Schedule.cron({ minute: '0/10' })
     })
 
     lambdaScheduledExecution.addTarget(
