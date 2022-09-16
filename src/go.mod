@@ -3,6 +3,8 @@ module mowemcfc/discRSS
 go 1.18
 
 require (
+	github.com/aws/aws-lambda-go v1.34.1
+	github.com/aws/aws-sdk-go v1.44.95
 	github.com/bwmarrin/discordgo v0.25.0
 	github.com/mmcdole/gofeed v1.1.3
 )
@@ -10,8 +12,6 @@ require (
 require (
 	github.com/PuerkitoBio/goquery v1.5.1 // indirect
 	github.com/andybalholm/cascadia v1.1.0 // indirect
-	github.com/aws/aws-lambda-go v1.34.1 // indirect
-	github.com/aws/aws-sdk-go v1.44.95 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/json-iterator/go v1.1.10 // indirect
