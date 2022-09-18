@@ -4,3 +4,6 @@ deploy:
 
 backend:
 	$(MAKE) -C src/backend all
+
+destroy:
+	$(MAKE) -C provision/ destroy
