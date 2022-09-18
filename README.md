@@ -1,5 +1,16 @@
 # discRSS
 
+## Usage
+
+Rename `provision/local/sample_discord_token.txt` to `discord_token.txt` and replace the text with your own Discord bot token.
+
+Replace the initialisation data in `provision/lib/discRSSStack.ts` with your desired channels and feed subcriptions. (TODO: provide a nicer interface to configure this)
+
+Run the init script: (TODO: think about how to remove profile-based argument)
+
+```sh
+make deploy
+```
 
 ## TODO
 
