@@ -6,5 +6,5 @@ backend:
 	$(MAKE) -C src/backend all
 
 destroy:
-	$(MAKE) -C src/backend clean
 	$(MAKE) -C provision/ destroy
+	$(MAKE) -C src/backend clean

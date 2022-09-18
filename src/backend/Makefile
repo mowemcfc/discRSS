@@ -3,4 +3,4 @@ all:
 	zip main.zip main
 
 clean:
-	rm main.zip
+	rm main.zip || true
