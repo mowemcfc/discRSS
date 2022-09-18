@@ -14,11 +14,13 @@ make deploy
 
 ## TODO
 
-- [ ] cdk stack to host app on lambda
+- [x] cdk stack to host app on lambda
   - [x] DDB tables
   - [x] lambda
-  - [ ] apigw endpoints
-    - [ ] user
+  - [x] apigw endpoints
+    - [x] user
+  - [ ] split user fetch call into separate lambda
+    - [ ] call this lambda from cronned lambda
 - [x] make table retention policy DESTROY
 - [x] convert go into lambda
 - [x] start sessions in separate functions

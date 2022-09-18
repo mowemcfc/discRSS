@@ -11,6 +11,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 
+import 'datejs'
+
 export class DiscRssStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
@@ -125,6 +127,7 @@ export class DiscRssStack extends Stack {
     appConfigTable.applyRemovalPolicy(RemovalPolicy.DESTROY)
     appConfigTable.grantReadWriteData(discRSSLambda.role!.grantPrincipal)
 
+    const currentTime = new Date().toISOString()
     const appConfigTableInitAction: cr.AwsSdkCall = {
       service: 'DynamoDB',
       action: 'putItem',
@@ -132,7 +135,7 @@ export class DiscRssStack extends Stack {
         TableName: appConfigTable.tableName,
         Item: { 
           appName: { S: "discRSS" },
-          lastCheckedTime: { S: "2022-08-30T00:00:00+10:00" }, 
+          lastCheckedTime: { S: currentTime }, 
           lastCheckedTimeFormat: { S: "2006-01-02T15:04:05Z07:00" }
         }
       },

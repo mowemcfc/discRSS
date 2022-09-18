@@ -21,9 +21,11 @@
     "typescript": "~3.9.7"
   },
   "dependencies": {
+    "@types/datejs": "^0.0.32",
     "aws-cdk-lib": "2.25.0",
     "aws-sdk": "^2.1215.0",
     "constructs": "^10.0.0",
+    "datejs": "^1.0.0-rc3",
     "source-map-support": "^0.5.21"
   }
 }
