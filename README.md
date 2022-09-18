@@ -19,8 +19,6 @@ make deploy
   - [x] lambda
   - [x] apigw endpoints
     - [x] user
-  - [ ] split user fetch call into separate lambda
-    - [ ] call this lambda from cronned lambda
 - [x] make table retention policy DESTROY
 - [x] convert go into lambda
 - [x] start sessions in separate functions
@@ -33,10 +31,13 @@ make deploy
   - [x] ddb table
 - [x] DB (SQL / nosql) schema
 - [x] iterate over multiple channels to post in
-- [ ] make aws session global
-- [ ] init lastCheckedTime in CDK as time.now()
 - [x] eventbridge schedule for lambda
 - [x] update lastChecked from code
+- [ ] interface init data, consumed by cdk
+- [ ] split user fetch call into separate lambda
+  - [ ] call this lambda from cronned lambda
+- [ ] make aws session global
+- [ ] init lastCheckedTime in CDK as time.now()
 - [ ] make as much of lambda async as possible
 - [ ] logging
   - [x] basic
