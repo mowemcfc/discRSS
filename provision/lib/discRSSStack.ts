@@ -32,7 +32,6 @@ export class DiscRssStack extends Stack {
       new eventtargets.LambdaFunction(discRSSLambda, {})
     )
 
-    
     const userApi = new apigateway.RestApi(this, 'DiscRSS-UserAPI', {
       restApiName: 'discRSS-UserAPI',
       deploy: true,
@@ -40,6 +39,7 @@ export class DiscRssStack extends Stack {
         stageName: 'v1'
       }
     })
+    
     const userApiLambdaIntegration = new apigateway.LambdaIntegration(
       discRSSLambda, {
         contentHandling: apigateway.ContentHandling.CONVERT_TO_TEXT,
@@ -52,9 +52,6 @@ export class DiscRssStack extends Stack {
       sourceArn: userApi.arnForExecuteApi('*'),
     })
 
-
-    //const userAPIResource =  userAPI.root.addResource('users')
-    //userAPIResource.addMethod('GET')
 
     const userTable = new dynamodb.Table(this, 'DiscRSS-UserTable', {
       tableName: 'discRSS-UserRecords',
