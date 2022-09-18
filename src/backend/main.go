@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"sync"
@@ -239,12 +240,12 @@ func commentNewPosts(sess *discordgo.Session, wg *sync.WaitGroup, feed Feed, cha
 }
 
 //func start(ctx context.Context) {
-func start() {
+func start() (map[string]interface{}, error) {
 
 	aws, err := getAWSSession()
 	if err != nil {
 		fmt.Println(err)
-		return
+		return nil, err
 	}
 	secretsmanagerSvc = secretsmanager.New(aws)
 	ddbSvc = dynamodb.New(aws)
@@ -252,25 +253,25 @@ func start() {
 	discRssConfig, err = fetchAppConfig(aws, "discRSS")
 	if err != nil {
 		fmt.Println(err)
-		return
+		return nil, err
 	}
 
 	discordToken, err := fetchDiscordToken(aws)
 	if err != nil {
 		fmt.Println(err)
-		return
+		return nil, err
 	}
 
 	discord, err := getDiscordSession(discordToken)
 	if err != nil {
 		fmt.Println(err)
-		return
+		return nil, err
 	}
 
 	user, err := fetchUser(aws, 1)
 	if err != nil {
 		fmt.Println(err)
-		return
+		return nil, err
 	}
 
 	fmt.Printf("user %d channels: %+v", user.UserID, user.ChannelList)
@@ -286,8 +287,23 @@ func start() {
 
 	if err := updateLastCheckedTime(aws, time.Now()); err != nil {
 		fmt.Println(err)
-		return
+		return nil, err
 	}
+
+	marshalled, err := json.Marshal(user)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+
+	fmt.Printf("returning: %+v", user)
+	return map[string]interface{}{
+			"statusCode":      200,
+			"isBase64Encoded": false,
+			"headers":         map[string]string{"Content-Type": "application/json"},
+			"body":            string(marshalled),
+		},
+		nil
 }
 
 func main() {

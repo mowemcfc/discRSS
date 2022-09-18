@@ -17,7 +17,8 @@ make deploy
 - [ ] cdk stack to host app on lambda
   - [x] DDB tables
   - [x] lambda
-  - [ ] lambda endpoints
+  - [ ] apigw endpoints
+    - [ ] user
 - [x] make table retention policy DESTROY
 - [x] convert go into lambda
 - [x] start sessions in separate functions
@@ -34,6 +35,7 @@ make deploy
 - [ ] init lastCheckedTime in CDK as time.now()
 - [x] eventbridge schedule for lambda
 - [x] update lastChecked from code
+- [ ] make as much of lambda async as possible
 - [ ] logging
   - [x] basic
   - [ ] structured

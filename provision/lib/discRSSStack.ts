@@ -4,10 +4,12 @@ import * as cr from 'aws-cdk-lib/custom-resources';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb'
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager'
 import * as lambda from 'aws-cdk-lib/aws-lambda'
+import * as apigateway from 'aws-cdk-lib/aws-apigateway'
 import * as eventbridge from 'aws-cdk-lib/aws-events'
 import * as eventtargets from 'aws-cdk-lib/aws-events-targets'
 import * as fs from 'fs';
 import * as path from 'path';
+import { ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 
 export class DiscRssStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -22,7 +24,7 @@ export class DiscRssStack extends Stack {
       timeout: Duration.seconds(60)
     })
 
-    const lambdaScheduledExecution = new eventbridge.Rule(this, 'lambdaScheduledExecution', {
+    const lambdaScheduledExecution = new eventbridge.Rule(this, 'DiscRSS-LambdaScheduledExecution', {
       schedule: eventbridge.Schedule.cron({ minute: '0/10' })
     })
 
@@ -30,7 +32,31 @@ export class DiscRssStack extends Stack {
       new eventtargets.LambdaFunction(discRSSLambda, {})
     )
 
-    const userTable = new dynamodb.Table(this, 'UserTable', {
+    
+    const userApi = new apigateway.RestApi(this, 'DiscRSS-UserAPI', {
+      restApiName: 'discRSS-UserAPI',
+      deploy: true,
+      deployOptions: {
+        stageName: 'v1'
+      }
+    })
+    const userApiLambdaIntegration = new apigateway.LambdaIntegration(
+      discRSSLambda, {
+        contentHandling: apigateway.ContentHandling.CONVERT_TO_TEXT,
+      }
+    )
+    const userApiMethod = userApi.root.addResource('user').addMethod("ANY", userApiLambdaIntegration)
+
+    discRSSLambda.addPermission('DiscRSS-AllowAPIGWInvocation', {
+      principal: new ServicePrincipal('apigateway.amazonaws.com'),
+      sourceArn: userApi.arnForExecuteApi('*'),
+    })
+
+
+    //const userAPIResource =  userAPI.root.addResource('users')
+    //userAPIResource.addMethod('GET')
+
+    const userTable = new dynamodb.Table(this, 'DiscRSS-UserTable', {
       tableName: 'discRSS-UserRecords',
       partitionKey: {
         name: 'userID',
@@ -92,7 +118,7 @@ export class DiscRssStack extends Stack {
       policy: cr.AwsCustomResourcePolicy.fromSdkCalls({ resources: cr.AwsCustomResourcePolicy.ANY_RESOURCE }),
     });
 
-    const appConfigTable = new dynamodb.Table(this, 'AppConfigTable', {
+    const appConfigTable = new dynamodb.Table(this, 'DiscRSS-AppConfigTable', {
       tableName: 'discRSS-AppConfigs',
       partitionKey: {
         name: 'appName',
@@ -116,13 +142,13 @@ export class DiscRssStack extends Stack {
       physicalResourceId: cr.PhysicalResourceId.of(appConfigTable.tableName + '_initialization')
     }
 
-    const appConfigTableInit = new cr.AwsCustomResource(this, 'initAppConfigTable', {
+    const appConfigTableInit = new cr.AwsCustomResource(this, 'DiscRSS-InitAppConfigTable', {
       onCreate: appConfigTableInitAction,
       onUpdate: appConfigTableInitAction,
       policy: cr.AwsCustomResourcePolicy.fromSdkCalls({ resources: cr.AwsCustomResourcePolicy.ANY_RESOURCE })
     })
 
-    const discordBotSecret = new secretsmanager.Secret(this, 'DiscordBotSecret', {
+    const discordBotSecret = new secretsmanager.Secret(this, 'DiscRSS-DiscordBotSecret', {
       secretName: 'discRSS/discord-bot-secret',
     })
     discordBotSecret.grantRead(discRSSLambda.role!.grantPrincipal)
@@ -137,7 +163,7 @@ export class DiscRssStack extends Stack {
         physicalResourceId: cr.PhysicalResourceId.of(discordBotSecret.secretName + '_initialisation')
     }
 
-    const discordBotTokenUpdateCr = new cr.AwsCustomResource(this, 'DiscordBotSecretUpdate', {
+    const discordBotTokenUpdateCr = new cr.AwsCustomResource(this, 'DiscRSS-DiscordBotSecretUpdate', {
       onCreate: putDiscordBotSecretAction,
       onUpdate: putDiscordBotSecretAction,
       policy: cr.AwsCustomResourcePolicy.fromSdkCalls({ resources: cr.AwsCustomResourcePolicy.ANY_RESOURCE }),
