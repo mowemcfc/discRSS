@@ -17,7 +17,7 @@ export class DiscRssStack extends Stack {
       functionName: 'discRSSLambda',
       architecture: lambda.Architecture.X86_64,
       runtime: lambda.Runtime.GO_1_X,
-      code: lambda.Code.fromAsset(path.join(__dirname, '../../src')),
+      code: lambda.Code.fromAsset(path.join(__dirname, '../../src/backend/main.zip')),
       handler: 'main',
       timeout: Duration.seconds(60)
     })
