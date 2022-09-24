@@ -1,0 +1,76 @@
+{
+  "Item": {
+    "userID": {
+      "N": "1"
+    },
+    "username": {
+      "S": "mowemcfc"
+    },
+    "feedList": {
+      "L": [
+        {
+          "M": {
+            "feedID": {
+              "N": "1"
+            },
+            "title": {
+              "S": "The Future Does Not Fit In The Containers Of The Past"
+            },
+            "url": {
+              "S": "https://rishad.substack.com/feed"
+            },
+            "timeFormat": {
+              "S": "Mon, 02 Jan 2006 15:04:05 MST"
+            }
+          }
+        },
+        {
+          "M": {
+            "feedID": {
+              "N": "2"
+            },
+            "title": {
+              "S": "Dan Luu"
+            },
+            "url": {
+              "S": "https://danluu.com/atom.xml"
+            },
+            "timeFormat": {
+              "S": "Mon, 02 Jan 2006 15:04:05 -0700"
+            }
+          }
+        }
+      ]
+    },
+    "channelList": {
+      "L": [
+        {
+          "M": {
+            "channelID": {
+              "N": "985831956203851786"
+            },
+            "channelName": {
+              "S": "mowes mate"
+            },
+            "serverName": {
+              "S": "mines"
+            }
+          }
+        },
+        {
+          "M": {
+            "channelID": {
+              "N": "958948046606053406"
+            },
+            "channelName": {
+              "S": "rss"
+            },
+            "serverName": {
+              "S": "klnkn (pers)"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -65,49 +65,15 @@ export class DiscRssStack extends Stack {
     userTable.applyRemovalPolicy(RemovalPolicy.DESTROY)
     userTable.grantReadWriteData(discRSSLambda.role!.grantPrincipal)
     
+    // Load initialised feed/channel data from file. Feel free to replace this data with your own if you like
+    const initData = fs.readFileSync(path.join(__dirname, '../local/init_data.json'), { encoding: 'utf-8' })
+
     const userTableInitAction: cr.AwsSdkCall = {
       service: 'DynamoDB',
       action: 'putItem',
       parameters: {
         TableName: userTable.tableName,
-        Item: { 
-          userID: { N: "1" },
-          username: { S: "mowemcfc" }, 
-          feedList: { L: [
-            {
-              M: { 
-                feedID: { N: "1" }, 
-                title: { S: "The Future Does Not Fit In The Containers Of The Past" },
-                url: {S: "https://rishad.substack.com/feed" }, 
-                timeFormat: { S: "Mon, 02 Jan 2006 15:04:05 MST" },
-              }
-            },
-            {
-              M: { 
-                feedID: { N: "2" }, 
-                title: { S: "Dan Luu" },
-                url: {S: "https://danluu.com/atom.xml" }, 
-                timeFormat: { S: "Mon, 02 Jan 2006 15:04:05 -0700" },
-              }
-            },
-          ]},
-          channelList: { L: [
-            {
-              M: { 
-                channelID: { N: "985831956203851786" }, 
-                channelName: { S: "mowes mate" },
-                serverName: {S: "mines" }, 
-              }
-            },
-            {
-              M: { 
-                channelID: { N: "958948046606053406" }, 
-                channelName: { S: "rss" },
-                serverName: {S: "klnkn (pers)" }, 
-              }
-            },
-          ]}
-        },
+        Item: JSON.parse(initData)
       },
       physicalResourceId: cr.PhysicalResourceId.of(userTable.tableName + '_initialization')
     }
