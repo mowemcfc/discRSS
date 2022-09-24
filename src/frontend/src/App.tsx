@@ -12,7 +12,7 @@ import {
 } from 'react-router-dom';
 import { ProtectedRoute } from './components/protected';
 
-function App() {
+export const App: React.FC = () => {
   return (
     <BrowserRouter>
       <Routes>
@@ -30,4 +30,3 @@ function App() {
   );
 }
 
-export default App;
