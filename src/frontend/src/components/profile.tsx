@@ -2,7 +2,7 @@ import React from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { LogoutButton } from "./logout";
 
-const UserProfile = () => {
+export const UserProfile = () => {
   const { user } = useAuth0();
 
   return (
@@ -14,5 +14,3 @@ const UserProfile = () => {
     </div>
   );
 };
-
-export default UserProfile;

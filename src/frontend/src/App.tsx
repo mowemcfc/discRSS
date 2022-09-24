@@ -2,8 +2,8 @@ import React from 'react';
 import logo from './logo.svg';
 import './App.css';
 
-import { LoginPage } from './components/login';
-import UserProfile from './components/profile';
+import { LoginPage } from './pages/login-page';
+import { ProfilePage } from './pages/profile-page';
 
 import {
   Routes,
@@ -18,7 +18,7 @@ export const App: React.FC = () => {
       <Routes>
         <Route 
           path="/" 
-          element={<ProtectedRoute component={UserProfile} />} 
+          element={<ProtectedRoute component={ProfilePage} />} 
         />
 
         <Route 
