@@ -33,11 +33,11 @@ make deploy
 - [x] iterate over multiple channels to post in
 - [x] eventbridge schedule for lambda
 - [x] update lastChecked from code
-- [ ] interface init data, consumed by cdk
-- [ ] split user fetch call into separate lambda
+- [x] interface init data, consumed by cdk
+- [x] split user fetch call into separate lambda
   - [ ] call this lambda from cronned lambda
-- [ ] make aws session global
-- [ ] init lastCheckedTime in CDK as time.now()
+- [x] make aws session global
+- [x] init lastCheckedTime in CDK as time.now()
 - [ ] make as much of lambda async as possible
 - [ ] logging
   - [x] basic
@@ -52,3 +52,5 @@ make deploy
   - [ ] display channels via ddb fetch
   - [ ] allow putitem new feeds via frontend form 
   - [ ] putitem new channels via frontend form
+- [ ] fix eventbridge call to lambda IOT use /scan endpoint
+- [ ] lambda JWT auth
