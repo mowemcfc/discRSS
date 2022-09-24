@@ -245,7 +245,7 @@ func commentNewPosts(sess *discordgo.Session, wg *sync.WaitGroup, feed Feed, cha
 	}
 }
 
-func userHandler(c *gin.Context) {
+func scanHandler(c *gin.Context) {
 	aws, err := getAWSSession()
 	if err != nil {
 		fmt.Println(err)
@@ -260,24 +260,60 @@ func userHandler(c *gin.Context) {
 		return
 	}
 
-	//discordToken, err := fetchDiscordToken(aws)
-	//if err != nil {
-	//	fmt.Println(err)
-	//	return nil, err
-	//}
+	discordToken, err := fetchDiscordToken(aws)
+	if err != nil {
+		fmt.Println(err)
+	}
 
-	//discord, err := getDiscordSession(discordToken)
-	//if err != nil {
-	//	fmt.Println(err)
-	//	return nil, err
-	//}
+	discord, err := getDiscordSession(discordToken)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 
 	requestUserID, err := strconv.Atoi(c.Request.URL.Query().Get("userID"))
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	fmt.Printf("userID: %s\n", requestUserID)
+	fmt.Printf("userID: %d\n", requestUserID)
+
+	user, err := fetchUser(aws, requestUserID)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	// Initialise a WaitGroup that will spawn a goroutine per subscribed RSS feed to post all new content
+	var wg sync.WaitGroup
+	for _, feed := range user.FeedList {
+		wg.Add(1)
+		go commentNewPosts(discord, &wg, feed, user.ChannelList)
+	}
+	wg.Wait()
+
+	if err := updateLastCheckedTime(aws, time.Now()); err != nil {
+		fmt.Println(err)
+		return
+	}
+
+}
+
+func userHandler(c *gin.Context) {
+	aws, err := getAWSSession()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	secretsmanagerSvc = secretsmanager.New(aws)
+	ddbSvc = dynamodb.New(aws)
+
+	requestUserID, err := strconv.Atoi(c.Request.URL.Query().Get("userID"))
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Printf("userID: %d\n", requestUserID)
 
 	user, err := fetchUser(aws, requestUserID)
 	if err != nil {
@@ -287,19 +323,6 @@ func userHandler(c *gin.Context) {
 
 	fmt.Printf("user %d channels: %+v", user.UserID, user.ChannelList)
 	fmt.Printf("user %d feeds: %+v", user.UserID, user.FeedList)
-
-	// Initialise a WaitGroup that will spawn a goroutine per subscribed RSS feed to post all new content
-	//var wg sync.WaitGroup
-	//for _, feed := range user.FeedList {
-	//	wg.Add(1)
-	//	go commentNewPosts(discord, &wg, feed, user.ChannelList)
-	//}
-	//wg.Wait()
-
-	//if err := updateLastCheckedTime(aws, time.Now()); err != nil {
-	//	fmt.Println(err)
-	//	return nil, err
-	//}
 
 	marshalledUser, err := json.Marshal(user)
 	if err != nil {
@@ -338,6 +361,7 @@ func main() {
 
 	g.GET("/user", userHandler)
 	g.GET("/hello", helloWorldHandler)
+	g.GET("/scan", scanHandler)
 	ginLambda = ginadapter.New(g)
 	lambda.Start(Handler)
 }
