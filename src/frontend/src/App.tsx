@@ -5,10 +5,15 @@ import './App.css';
 import LoginButton from './components/login';
 import LogoutButton from './components/logout';
 import Profile from './components/profile';
+import { useAuth0 } from "@auth0/auth0-react"
 
 function App() {
+  const { isAuthenticated } = useAuth0();
   return (
+    isAuthenticated ?
     <div className='App'>
+        <LogoutButton></LogoutButton>
+        <Profile></Profile>
         <header className="App-header">
           <img src={logo} className="App-logo" alt="logo" />
           <p>
@@ -23,10 +28,9 @@ function App() {
             Learn React
           </a>
         </header>
-        <LoginButton></LoginButton>
-        <LogoutButton></LogoutButton>
-        <Profile></Profile>
     </div>
+    :
+    <LoginButton></LoginButton>
   );
 }
 
