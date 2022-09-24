@@ -45,7 +45,7 @@ make deploy
 - [ ] tracing
 - [x] frontend
   - [x] login page
-   - [ ] make login page redirect to profile if already logged in
+   - [x] make login page redirect to profile if already logged in
   - [x] auth0 integration
   - [ ] hardcode userid=1
   - [ ] display feeds via ddb fetch

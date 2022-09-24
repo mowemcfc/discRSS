@@ -70,10 +70,9 @@ export class DiscRssStack extends Stack {
 
     const userTableInitAction: cr.AwsSdkCall = {
       service: 'DynamoDB',
-      action: 'putItem',
+      action: 'batchWriteItem',
       parameters: {
-        TableName: userTable.tableName,
-        Item: JSON.parse(initData)
+        RequestItems: JSON.parse(initData)
       },
       physicalResourceId: cr.PhysicalResourceId.of(userTable.tableName + '_initialization')
     }

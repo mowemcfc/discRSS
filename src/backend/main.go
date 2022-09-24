@@ -1,12 +1,14 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strconv"
 	"sync"
 	"time"
 
+	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -18,6 +20,11 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/mmcdole/gofeed"
 )
+
+type Event struct {
+	userID   int
+	userName string
+}
 
 type Feed struct {
 	FeedID     int    `json:"feedID"`
@@ -240,7 +247,7 @@ func commentNewPosts(sess *discordgo.Session, wg *sync.WaitGroup, feed Feed, cha
 }
 
 //func start(ctx context.Context) {
-func start() (map[string]interface{}, error) {
+func start(ctx context.Context, event events.APIGatewayV2HTTPRequest) (map[string]interface{}, error) {
 
 	aws, err := getAWSSession()
 	if err != nil {
@@ -256,19 +263,30 @@ func start() (map[string]interface{}, error) {
 		return nil, err
 	}
 
-	discordToken, err := fetchDiscordToken(aws)
+	//discordToken, err := fetchDiscordToken(aws)
+	//if err != nil {
+	//	fmt.Println(err)
+	//	return nil, err
+	//}
+
+	//discord, err := getDiscordSession(discordToken)
+	//if err != nil {
+	//	fmt.Println(err)
+	//	return nil, err
+	//}
+
+	requestParameters := event.QueryStringParameters
+
+	fmt.Println("query params: ", requestParameters)
+	fmt.Printf("userID: %s\n", requestParameters["userID"])
+
+	requestUserID, err := strconv.Atoi(requestParameters["userID"])
 	if err != nil {
 		fmt.Println(err)
 		return nil, err
 	}
 
-	discord, err := getDiscordSession(discordToken)
-	if err != nil {
-		fmt.Println(err)
-		return nil, err
-	}
-
-	user, err := fetchUser(aws, 1)
+	user, err := fetchUser(aws, requestUserID)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err
@@ -278,17 +296,17 @@ func start() (map[string]interface{}, error) {
 	fmt.Printf("user %d feeds: %+v", user.UserID, user.FeedList)
 
 	// Initialise a WaitGroup that will spawn a goroutine per subscribed RSS feed to post all new content
-	var wg sync.WaitGroup
-	for _, feed := range user.FeedList {
-		wg.Add(1)
-		go commentNewPosts(discord, &wg, feed, user.ChannelList)
-	}
-	wg.Wait()
+	//var wg sync.WaitGroup
+	//for _, feed := range user.FeedList {
+	//	wg.Add(1)
+	//	go commentNewPosts(discord, &wg, feed, user.ChannelList)
+	//}
+	//wg.Wait()
 
-	if err := updateLastCheckedTime(aws, time.Now()); err != nil {
-		fmt.Println(err)
-		return nil, err
-	}
+	//if err := updateLastCheckedTime(aws, time.Now()); err != nil {
+	//	fmt.Println(err)
+	//	return nil, err
+	//}
 
 	marshalled, err := json.Marshal(user)
 	if err != nil {
