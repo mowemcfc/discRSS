@@ -47,7 +47,7 @@ export class DiscRssStack extends Stack {
         contentHandling: apigateway.ContentHandling.CONVERT_TO_TEXT,
       }
     )
-    const userApiMethod = userApi.root.addResource('user').addMethod("ANY", userApiLambdaIntegration)
+    userApi.root.addProxy({ defaultIntegration: userApiLambdaIntegration })
 
     discRSSLambda.addPermission('DiscRSS-AllowAPIGWInvocation', {
       principal: new ServicePrincipal('apigateway.amazonaws.com'),

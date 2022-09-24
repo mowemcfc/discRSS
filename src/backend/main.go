@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"strconv"
 	"sync"
 	"time"
@@ -16,8 +17,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
-
+	ginadapter "github.com/awslabs/aws-lambda-go-api-proxy/gin"
 	"github.com/bwmarrin/discordgo"
+	"github.com/gin-gonic/gin"
 	"github.com/mmcdole/gofeed"
 )
 
@@ -48,6 +50,8 @@ type AppConfig struct {
 }
 
 var discRssConfig *AppConfig
+
+var ginLambda *ginadapter.GinLambda
 
 var secretsmanagerSvc *secretsmanager.SecretsManager
 var ddbSvc *dynamodb.DynamoDB
@@ -241,13 +245,11 @@ func commentNewPosts(sess *discordgo.Session, wg *sync.WaitGroup, feed Feed, cha
 	}
 }
 
-//func start(ctx context.Context) {
-func start(ctx context.Context, event events.APIGatewayV2HTTPRequest) (map[string]interface{}, error) {
-
+func userHandler(c *gin.Context) {
 	aws, err := getAWSSession()
 	if err != nil {
 		fmt.Println(err)
-		return nil, err
+		return
 	}
 	secretsmanagerSvc = secretsmanager.New(aws)
 	ddbSvc = dynamodb.New(aws)
@@ -255,7 +257,7 @@ func start(ctx context.Context, event events.APIGatewayV2HTTPRequest) (map[strin
 	discRssConfig, err = fetchAppConfig(aws, "discRSS")
 	if err != nil {
 		fmt.Println(err)
-		return nil, err
+		return
 	}
 
 	//discordToken, err := fetchDiscordToken(aws)
@@ -270,21 +272,17 @@ func start(ctx context.Context, event events.APIGatewayV2HTTPRequest) (map[strin
 	//	return nil, err
 	//}
 
-	requestParameters := event.QueryStringParameters
-
-	fmt.Println("query params: ", requestParameters)
-	fmt.Printf("userID: %s\n", requestParameters["userID"])
-
-	requestUserID, err := strconv.Atoi(requestParameters["userID"])
+	requestUserID, err := strconv.Atoi(c.Request.URL.Query().Get("userID"))
 	if err != nil {
 		fmt.Println(err)
-		return nil, err
+		return
 	}
+	fmt.Printf("userID: %s\n", requestUserID)
 
 	user, err := fetchUser(aws, requestUserID)
 	if err != nil {
 		fmt.Println(err)
-		return nil, err
+		return
 	}
 
 	fmt.Printf("user %d channels: %+v", user.UserID, user.ChannelList)
@@ -303,22 +301,47 @@ func start(ctx context.Context, event events.APIGatewayV2HTTPRequest) (map[strin
 	//	return nil, err
 	//}
 
-	marshalled, err := json.Marshal(user)
+	marshalledUser, err := json.Marshal(user)
 	if err != nil {
 		fmt.Println(err)
-		return nil, err
+		return
 	}
 
-	fmt.Printf("returning: %+v", user)
-	return map[string]interface{}{
-			"statusCode":      200,
-			"isBase64Encoded": false,
-			"headers":         map[string]string{"Content-Type": "application/json"},
-			"body":            string(marshalled),
-		},
-		nil
+	c.JSON(http.StatusOK, gin.H{
+		"StatusCode":      http.StatusOK,
+		"IsBase64Encoded": false,
+		"Headers":         map[string]string{"Content-Type": "application/json"},
+		"Body":            string(marshalledUser),
+	})
+}
+
+func helloWorldHandler(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{
+		"StatusCode":      http.StatusOK,
+		"IsBase64Encoded": false,
+		"Headers":         map[string]string{"Content-Type": "application/json"},
+		"Body":            "Hello, World!",
+	})
+}
+
+func notFoundHandler(c *gin.Context) {
+	c.JSON(http.StatusNotFound, gin.H{
+		"StatusCode":      http.StatusNotFound,
+		"IsBase64Encoded": false,
+		"Headers":         map[string]string{"Content-Type": "application/json"},
+		"Body":            fmt.Sprintf("Not Found: %s", c.Request.URL.Path),
+	})
 }
 
 func main() {
-	lambda.Start(start)
+	g := gin.Default()
+
+	g.GET("/user", userHandler)
+	g.GET("/hello", helloWorldHandler)
+	ginLambda = ginadapter.New(g)
+	lambda.Start(Handler)
+}
+
+func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	return ginLambda.ProxyWithContext(ctx, request)
 }
