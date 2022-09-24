@@ -1,8 +1,7 @@
 import React from 'react';
-import logo from './logo.svg';
 import './App.css';
 
-import { LoginPage } from './pages/login-page';
+import { LoginPage, LoginPageAction, LoginPageLoader } from './pages/login-page';
 import { ProfilePage } from './pages/profile-page';
 
 import {
@@ -23,7 +22,9 @@ export const App: React.FC = () => {
 
         <Route 
           path="/login" 
-          element={<LoginPage />} 
+          element={<LoginPage />}
+          loader={LoginPageLoader} 
+          action={LoginPageAction}
         />
       </Routes>
     </BrowserRouter>
