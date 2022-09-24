@@ -21,11 +21,6 @@ import (
 	"github.com/mmcdole/gofeed"
 )
 
-type Event struct {
-	userID   int
-	userName string
-}
-
 type Feed struct {
 	FeedID     int    `json:"feedID"`
 	Title      string `json:"title"`
