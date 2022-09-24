@@ -43,7 +43,10 @@ make deploy
   - [x] basic
   - [ ] structured
 - [ ] tracing
-- [ ] frontend
+- [x] frontend
+  - [x] login page
+   - [ ] make login page redirect to profile if already logged in
+  - [x] auth0 integration
   - [ ] hardcode userid=1
   - [ ] display feeds via ddb fetch
   - [ ] display channels via ddb fetch
