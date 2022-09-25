@@ -27,7 +27,7 @@ type Feed struct {
 	FeedID     int    `json:"feedID"`
 	Title      string `json:"title"`
 	Url        string `json:"url"`
-	TimeFormat string `json:"TimeFormat"`
+	TimeFormat string `json:"timeFormat"`
 }
 
 type UserAccount struct {
@@ -325,6 +325,7 @@ func userHandler(c *gin.Context) {
 	fmt.Printf("user %d feeds: %+v", user.UserID, user.FeedList)
 
 	marshalledUser, err := json.Marshal(user)
+	fmt.Printf("\nmarshalled: %s\n", string(marshalledUser))
 	if err != nil {
 		fmt.Println(err)
 		return
