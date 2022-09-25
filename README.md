@@ -35,7 +35,7 @@ make deploy
 - [x] update lastChecked from code
 - [x] interface init data, consumed by cdk
 - [x] split user fetch call into separate lambda
-  - [ ] call this lambda from cronned lambda
+  - [x] call this lambda from cronned lambda
 - [x] make aws session global
 - [x] init lastCheckedTime in CDK as time.now()
 - [ ] make as much of lambda async as possible
@@ -55,3 +55,5 @@ make deploy
 - [ ] fix eventbridge call to lambda IOT use /scan endpoint
 - [ ] lambda JWT auth
 - [ ] proper api error handling
+- [ ] dev env w/ container etc
+  - [ ] deploy as container lambda
