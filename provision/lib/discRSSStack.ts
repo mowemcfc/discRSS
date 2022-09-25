@@ -26,14 +26,6 @@ export class DiscRssStack extends Stack {
       timeout: Duration.seconds(60)
     })
 
-    const lambdaScheduledExecution = new eventbridge.Rule(this, 'DiscRSS-LambdaScheduledExecution', {
-      schedule: eventbridge.Schedule.cron({ minute: '0/10' })
-    })
-
-    lambdaScheduledExecution.addTarget(
-      new eventtargets.LambdaFunction(discRSSLambda, {})
-    )
-
     const userApi = new apigateway.RestApi(this, 'DiscRSS-UserAPI', {
       restApiName: 'discRSS-UserAPI',
       deploy: true,
@@ -54,6 +46,19 @@ export class DiscRssStack extends Stack {
       sourceArn: userApi.arnForExecuteApi('*'),
     })
 
+    const lambdaScheduledExecution = new eventbridge.Rule(this, 'DiscRSS-LambdaScheduledExecution', {
+      schedule: eventbridge.Schedule.cron({ minute: '0/10' })
+    })
+
+    lambdaScheduledExecution.addTarget(
+      new eventtargets.ApiGateway(userApi, {
+        method: 'GET',
+        path: '/scan',
+        queryStringParameters: {
+          'userID': '1'
+        }
+      })
+    )
 
     const userTable = new dynamodb.Table(this, 'DiscRSS-UserTable', {
       tableName: 'discRSS-UserRecords',

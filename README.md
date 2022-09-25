@@ -54,3 +54,4 @@ make deploy
   - [ ] putitem new channels via frontend form
 - [ ] fix eventbridge call to lambda IOT use /scan endpoint
 - [ ] lambda JWT auth
+- [ ] proper api error handling
