@@ -47,7 +47,7 @@ export class DiscRssStack extends Stack {
     })
 
     const lambdaScheduledExecution = new eventbridge.Rule(this, 'DiscRSS-LambdaScheduledExecution', {
-      schedule: eventbridge.Schedule.cron({ minute: '0/10' })
+      schedule: eventbridge.Schedule.cron({ minute: '0/30' })
     })
 
     lambdaScheduledExecution.addTarget(
