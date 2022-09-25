@@ -3,7 +3,16 @@ import { useAuth0 } from "@auth0/auth0-react";
 import { LogoutButton } from "./logout";
 
 export const UserProfile = () => {
-  const { user } = useAuth0();
+  const {
+    user,
+    isAuthenticated,
+    isLoading,
+    getAccessTokenSilently,
+  } = useAuth0();
+
+  if(isLoading) {
+    return <div> Loading your user information </div>
+  }
 
   return (
     <div>

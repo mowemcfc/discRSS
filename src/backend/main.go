@@ -334,8 +334,11 @@ func userHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"StatusCode":      http.StatusOK,
 		"IsBase64Encoded": false,
-		"Headers":         map[string]string{"Content-Type": "application/json"},
-		"Body":            string(marshalledUser),
+		"Headers": map[string]string{
+			"Content-Type":                "application/json",
+			"Access-Control-Allow-Origin": "*",
+		},
+		"Body": string(marshalledUser),
 	})
 }
 
@@ -343,8 +346,23 @@ func helloWorldHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"StatusCode":      http.StatusOK,
 		"IsBase64Encoded": false,
-		"Headers":         map[string]string{"Content-Type": "application/json"},
-		"Body":            "Hello, World!",
+		"Headers": map[string]string{
+			"Content-Type":                "application/json",
+			"Access-Control-Allow-Origin": "*",
+		},
+		"Body": "Hello, World!",
+	})
+}
+
+func corsPreflightHandler(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{
+		"StatusCode":      http.StatusOK,
+		"IsBase64Encoded": false,
+		"Headers": map[string]string{
+			"Content-Type":                "application/json",
+			"Access-Control-Allow-Origin": "*",
+		},
+		"Body": "Hello from discRSS",
 	})
 }
 
@@ -352,15 +370,20 @@ func notFoundHandler(c *gin.Context) {
 	c.JSON(http.StatusNotFound, gin.H{
 		"StatusCode":      http.StatusNotFound,
 		"IsBase64Encoded": false,
-		"Headers":         map[string]string{"Content-Type": "application/json"},
-		"Body":            fmt.Sprintf("Not Found: %s", c.Request.URL.Path),
+		"Headers": map[string]string{
+			"Content-Type": "application/json",
+			//"Access-Control-Allow-Origin":  "http://localhost:3000",
+			//"Access-Control-Allow-Methods": "POST, PATCH, PUT, GET, OPTIONS",
+			//"Access-Control-Allow-Headers": "*, Authorization",
+		},
+		"Body": fmt.Sprintf("Not Found: %s", c.Request.URL.Path),
 	})
 }
 
 func main() {
 	g := gin.Default()
-
 	g.GET("/user", userHandler)
+	//g.OPTIONS("/user", corsPreflightHandler)
 	g.GET("/hello", helloWorldHandler)
 	g.GET("/scan", scanHandler)
 	ginLambda = ginadapter.New(g)

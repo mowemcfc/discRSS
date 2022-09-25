@@ -31,7 +31,16 @@ export class DiscRssStack extends Stack {
       deploy: true,
       deployOptions: {
         stageName: 'v1'
-      }
+      },
+      defaultCorsPreflightOptions: {
+        allowHeaders: [
+          '*',
+          'Authorization'
+        ],
+        allowMethods: apigateway.Cors.ALL_METHODS,
+        allowCredentials: true,
+        allowOrigins: ['*']
+      },
     })
     
     const userApiLambdaIntegration = new apigateway.LambdaIntegration(
