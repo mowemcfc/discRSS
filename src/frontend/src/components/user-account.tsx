@@ -12,12 +12,10 @@ export const UserAccount = ({ id }: any) => {
   } = useAuth0();
 
   const { data, error } = useSWR(
-    isLoading || !isAuthenticated ? null : 'https://cbiobsxi12.execute-api.ap-southeast-2.amazonaws.com/prod/user',
+    isLoading || !isAuthenticated ? null : 'https://cbiobsxi12.execute-api.ap-southeast-2.amazonaws.com/prod/',
     async (url) => {
-      const accessToken = getAccessTokenSilently({
-        scope: 'read:user'
-      });
-      const res = await fetch(`${url}?userID=${id}`, {
+      const accessToken = await getAccessTokenSilently();
+      const res = await fetch(`${url}user?userID=${id}`, {
         headers: {
           authorization: `Bearer ${accessToken}`
         },

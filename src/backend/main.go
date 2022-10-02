@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"sync"
@@ -17,9 +18,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
-	ginadapter "github.com/awslabs/aws-lambda-go-api-proxy/gin"
+	ginLambdaAdapter "github.com/awslabs/aws-lambda-go-api-proxy/gin"
 	"github.com/bwmarrin/discordgo"
 	"github.com/gin-gonic/gin"
+	adapter "github.com/gwatts/gin-adapter"
+	"github.com/joho/godotenv"
 	"github.com/mmcdole/gofeed"
 )
 
@@ -51,7 +54,7 @@ type AppConfig struct {
 
 var discRssConfig *AppConfig
 
-var ginLambda *ginadapter.GinLambda
+var ginLambda *ginLambdaAdapter.GinLambda
 
 var secretsmanagerSvc *secretsmanager.SecretsManager
 var ddbSvc *dynamodb.DynamoDB
@@ -385,13 +388,22 @@ func corsMiddleware() gin.HandlerFunc {
 }
 
 func main() {
+
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
 	g := gin.Default()
-	g.Use(corsMiddleware())
-	g.GET("/user", userHandler)
-	g.OPTIONS("/user", corsPreflightHandler)
-	g.GET("/hello", helloWorldHandler)
-	g.GET("/scan", scanHandler)
-	ginLambda = ginadapter.New(g)
+	jwtMiddleware := adapter.Wrap(EnsureValidToken())
+
+	g.GET("/hello", corsMiddleware(), helloWorldHandler)
+
+	g.GET("/user", corsMiddleware(), jwtMiddleware, userHandler)
+	g.OPTIONS("/user", corsMiddleware(), corsPreflightHandler)
+	g.GET("/scan", corsMiddleware(), jwtMiddleware, scanHandler)
+
+	ginLambda = ginLambdaAdapter.New(g)
 	lambda.Start(Handler)
 }
 

@@ -52,7 +52,10 @@ make deploy
   - [ ] display channels via ddb fetch
   - [ ] allow putitem new feeds via frontend form 
   - [ ] putitem new channels via frontend form
-- [ ] fix eventbridge call to lambda IOT use /scan endpoint
+- [x] fix eventbridge call to lambda IOT use /scan endpoint
+- [ ] split go into more files
+- [ ] consolidate .env files and other assorted local txt's
+- [ ] add .env placeholders throughout where used
 - [ ] lambda JWT auth
 - [ ] proper api error handling
 - [ ] dev env w/ container etc

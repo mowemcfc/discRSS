@@ -1,2 +1,5 @@
 # VSCode workspace
 *.code-workspace
+
+# Any .env folders in the project
+**/.env
