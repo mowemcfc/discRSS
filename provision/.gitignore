@@ -1,4 +1,8 @@
 node_modules/**
 cdk.out
 
+# my discord token :)
 local/discord_token.txt
+
+# synth testing output file
+synth.yml
