@@ -26,33 +26,15 @@ export class DiscRssStack extends Stack {
       timeout: Duration.seconds(60)
     })
 
-    const userApi = new apigateway.RestApi(this, 'DiscRSS-UserAPI', {
-      restApiName: 'discRSS-UserAPI',
+    const discRSSApi = new apigateway.LambdaRestApi(this, 'DiscRSS-API', {
+      handler: discRSSLambda,
       deploy: true,
-      deployOptions: {
-        stageName: 'v1'
-      },
-      defaultCorsPreflightOptions: {
-        allowHeaders: [
-          '*',
-          'Authorization'
-        ],
-        allowMethods: apigateway.Cors.ALL_METHODS,
-        allowCredentials: true,
-        allowOrigins: ['*']
-      },
+      proxy: true,
     })
-    
-    const userApiLambdaIntegration = new apigateway.LambdaIntegration(
-      discRSSLambda, {
-        contentHandling: apigateway.ContentHandling.CONVERT_TO_TEXT,
-      }
-    )
-    userApi.root.addProxy({ defaultIntegration: userApiLambdaIntegration })
 
     discRSSLambda.addPermission('DiscRSS-AllowAPIGWInvocation', {
       principal: new ServicePrincipal('apigateway.amazonaws.com'),
-      sourceArn: userApi.arnForExecuteApi('*'),
+      sourceArn: discRSSApi.arnForExecuteApi('*'),
     })
 
     const lambdaScheduledExecution = new eventbridge.Rule(this, 'DiscRSS-LambdaScheduledExecution', {
@@ -60,7 +42,7 @@ export class DiscRssStack extends Stack {
     })
 
     lambdaScheduledExecution.addTarget(
-      new eventtargets.ApiGateway(userApi, {
+      new eventtargets.ApiGateway(discRSSApi, {
         method: 'GET',
         path: '/scan',
         queryStringParameters: {

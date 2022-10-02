@@ -331,59 +331,64 @@ func userHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"StatusCode":      http.StatusOK,
-		"IsBase64Encoded": false,
-		"Headers": map[string]string{
-			"Content-Type":                "application/json",
-			"Access-Control-Allow-Origin": "*",
+	c.Header("Access-Control-Allow-Origin", "http://localhost:3000")
+	c.JSON(http.StatusOK, events.APIGatewayProxyResponse{
+		StatusCode:      http.StatusOK,
+		IsBase64Encoded: false,
+		Headers: map[string]string{
+			"Content-Type": "application/json",
 		},
-		"Body": string(marshalledUser),
+		Body: string(marshalledUser),
 	})
 }
 
 func helloWorldHandler(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"StatusCode":      http.StatusOK,
-		"IsBase64Encoded": false,
-		"Headers": map[string]string{
-			"Content-Type":                "application/json",
-			"Access-Control-Allow-Origin": "*",
+	c.JSON(http.StatusOK, events.APIGatewayProxyResponse{
+		StatusCode:      http.StatusOK,
+		IsBase64Encoded: false,
+		Headers: map[string]string{
+			"Content-Type": "application/json",
 		},
-		"Body": "Hello, World!",
+		Body: "Hello, World!",
 	})
 }
 
 func corsPreflightHandler(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"StatusCode":      http.StatusOK,
-		"IsBase64Encoded": false,
-		"Headers": map[string]string{
-			"Content-Type":                "application/json",
-			"Access-Control-Allow-Origin": "*",
+	c.JSON(http.StatusOK, events.APIGatewayProxyResponse{
+		StatusCode:      http.StatusOK,
+		IsBase64Encoded: false,
+		Headers: map[string]string{
+			"Content-Type": "application/json",
 		},
-		"Body": "Hello from discRSS",
+		Body: "Hello from discRSS",
 	})
 }
 
 func notFoundHandler(c *gin.Context) {
-	c.JSON(http.StatusNotFound, gin.H{
-		"StatusCode":      http.StatusNotFound,
-		"IsBase64Encoded": false,
-		"Headers": map[string]string{
+	c.JSON(http.StatusNotFound, events.APIGatewayProxyResponse{
+		StatusCode:      http.StatusNotFound,
+		IsBase64Encoded: false,
+		Headers: map[string]string{
 			"Content-Type": "application/json",
-			//"Access-Control-Allow-Origin":  "http://localhost:3000",
-			//"Access-Control-Allow-Methods": "POST, PATCH, PUT, GET, OPTIONS",
-			//"Access-Control-Allow-Headers": "*, Authorization",
 		},
-		"Body": fmt.Sprintf("Not Found: %s", c.Request.URL.Path),
+		Body: fmt.Sprintf("Not Found: %s", c.Request.URL.Path),
 	})
+}
+
+func corsMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Header("Access-Control-Allow-Origin", "http://localhost:3000")
+		c.Header("Access-Control-Allow-Methods", "POST, PATCH, PUT, GET, OPTIONS")
+		c.Header("Access-Control-Allow-Headers", "*, Authorization")
+		c.Header("Access-Control-Allow-Credentials", "true")
+	}
 }
 
 func main() {
 	g := gin.Default()
+	g.Use(corsMiddleware())
 	g.GET("/user", userHandler)
-	//g.OPTIONS("/user", corsPreflightHandler)
+	g.OPTIONS("/user", corsPreflightHandler)
 	g.GET("/hello", helloWorldHandler)
 	g.GET("/scan", scanHandler)
 	ginLambda = ginadapter.New(g)

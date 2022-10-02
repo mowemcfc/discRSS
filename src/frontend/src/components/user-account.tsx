@@ -12,7 +12,7 @@ export const UserAccount = ({ id }: any) => {
   } = useAuth0();
 
   const { data, error } = useSWR(
-    isLoading || !isAuthenticated ? null : 'https://qxxdo97bg8.execute-api.ap-southeast-2.amazonaws.com/v1/user',
+    isLoading || !isAuthenticated ? null : 'https://cbiobsxi12.execute-api.ap-southeast-2.amazonaws.com/prod/user',
     async (url) => {
       const accessToken = getAccessTokenSilently({
         scope: 'read:user'

@@ -6,7 +6,7 @@ export const useAuthnToken = async () => {
   } = useAuth0();
 
   const accessToken = await getAccessTokenSilently({
-    audience:'https://mipjsyf7l2.execute-api.ap-southeast-2.amazonaws.com/v1/user',
+    audience:'https://cbiobsxi12.execute-api.ap-southeast-2.amazonaws.com/prod/user',
     scope: 'read:user'
   })
 
