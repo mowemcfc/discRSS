@@ -15,17 +15,16 @@ export const App: React.FC = () => {
   return (
     <BrowserRouter>
       <Routes>
-        <Route 
-          path="/" 
-          element={<ProtectedRoute component={UserPage} />} 
+        <Route
+          path="/"
+          element={<ProtectedRoute component={UserPage} />}
         />
 
-        <Route 
-          path="/login" 
+        <Route
+          path="/login"
           element={<LoginPage />}
         />
       </Routes>
     </BrowserRouter>
   );
 }
-
