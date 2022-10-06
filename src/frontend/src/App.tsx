@@ -2,7 +2,7 @@ import React from 'react';
 import './App.css';
 
 import { LoginPage } from './pages/login-page';
-import { ProfilePage } from './pages/profile-page';
+import { UserPage } from './pages/user-page';
 
 import {
   Routes,
@@ -17,7 +17,7 @@ export const App: React.FC = () => {
       <Routes>
         <Route 
           path="/" 
-          element={<ProtectedRoute component={ProfilePage} />} 
+          element={<ProtectedRoute component={UserPage} />} 
         />
 
         <Route 
