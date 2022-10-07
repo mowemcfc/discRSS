@@ -3,6 +3,7 @@ import { UserProfile } from "../components/profile";
 import { useAuth0 } from "@auth0/auth0-react";
 import { Navigate } from "react-router-dom";
 import { UserModal } from "../components/user-modal";
+import { SiteBanner } from '../components/site-banner'
 import UserAccount from '../types/user'
 
 export const UserPage = () => {
@@ -32,7 +33,7 @@ export const UserPage = () => {
     }
 
     fetchUser(1)
-  }, [user?.email])
+  }, [user?.email, getAccessTokenSilently])
 
   if (isLoading) {
     return <div> Loading your user profile... </div>
@@ -44,6 +45,7 @@ export const UserPage = () => {
 
   return (
     <div>
+      <SiteBanner />
       <UserProfile />
       <UserModal userAccount={ account }/>
     </div>

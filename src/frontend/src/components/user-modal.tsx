@@ -1,6 +1,6 @@
 
 import { UserAccount, Feed } from '../types/user'
-import { FeedRow } from './feed'
+import { FeedRow } from './feed-row'
 import React from 'react'
 
 export const UserModal = (props: { userAccount: UserAccount }) => {

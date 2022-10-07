@@ -1,12 +1,10 @@
 import React from "react";
-import { Link } from "react-router-dom"
+import { LoginButton } from "./login";
 
-export const HomeBanner = () => {
-
+export const SiteBanner = () => {
   return (
-    <div> 
-      Hello!
-      <Link to="/login"> Log In Page </Link>
+    <div>
+      Site Banner Here!
     </div>
   );
 };

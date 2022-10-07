@@ -10,6 +10,7 @@ import {
   BrowserRouter
 } from 'react-router-dom';
 import { ProtectedRoute } from './components/protected';
+import { HomePage } from './pages/home-page';
 
 export const App: React.FC = () => {
   return (
@@ -17,6 +18,11 @@ export const App: React.FC = () => {
       <Routes>
         <Route
           path="/"
+          element={<HomePage />}
+        />
+
+        <Route
+          path="/account"
           element={<ProtectedRoute component={UserPage} />}
         />
 

@@ -47,8 +47,9 @@ make deploy
   - [x] login page
    - [x] make login page redirect to profile if already logged in
   - [x] auth0 integration
-  - [ ] hardcode userid=1
   - [ ] display feeds via ddb fetch
+    - [ ] fetch data
+    - [ ] ui components
   - [ ] display channels via ddb fetch
   - [ ] allow putitem new feeds via frontend form 
   - [ ] putitem new channels via frontend form
@@ -57,6 +58,9 @@ make deploy
 - [ ] consolidate .env files and other assorted local txt's
 - [ ] add .env placeholders throughout where used
 - [ ] lambda JWT auth
-- [ ] proper api error handling
+  - [ ] basic
+  - [ ] allow proper scopes, createUser, getFeed
+  - [ ] compare provided username against jwt sub, throw error if mismatch
+  - [ ]
 - [ ] dev env w/ container etc
-  - [ ] deploy as container lambda
+  - [ ] deploy as container lambda?

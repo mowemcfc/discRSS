@@ -5,9 +5,7 @@ import { LogoutButton } from "./logout";
 export const UserProfile = () => {
   const {
     user,
-    isAuthenticated,
     isLoading,
-    getAccessTokenSilently,
   } = useAuth0();
 
   if(isLoading) {
