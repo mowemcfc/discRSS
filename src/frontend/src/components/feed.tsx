@@ -1,11 +1,17 @@
 import React from "react";
 import { Link } from "react-router-dom"
+import { Feed } from '../types/user'
 
-export const HomeBanner = () => {
+
+export const FeedRow = (props: {feed: Feed}) => {
   return (
     <div> 
-      Hello!
-      <Link to="/login"> Log In Page </Link>
+      <tr>
+        <td>{props.feed.feedID}</td>
+        <td>{props.feed.title}</td>
+        <td>{props.feed.url}</td>
+        <td>{props.feed.timeFormat}</td>
+      </tr>
     </div>
   );
 };

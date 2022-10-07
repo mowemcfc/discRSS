@@ -1,5 +1,6 @@
 
-import UserAccount from '../types/user'
+import { UserAccount, Feed } from '../types/user'
+import { FeedRow } from './feed'
 import React from 'react'
 
 export const UserModal = (props: { userAccount: UserAccount }) => {
@@ -12,9 +13,19 @@ export const UserModal = (props: { userAccount: UserAccount }) => {
     )
   }
 
+  const accountRows  = (feedList: Feed[]) => feedList.map((feed: Feed) => {
+    return (
+      <FeedRow feed={feed} />
+    )
+  })
+
   return (
     <div>
-      <h1>User account for {props.userAccount.username} with user ID {props.userAccount.userID}</h1>
+        <table>
+          <tbody>
+            {accountRows(props.userAccount.feedList)}
+          </tbody>
+        </table>
     </div>
   )
 }
