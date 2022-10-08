@@ -14,6 +14,7 @@ require (
 	github.com/andybalholm/cascadia v1.1.0 // indirect
 	github.com/auth0/go-jwt-middleware/v2 v2.0.1 // indirect
 	github.com/awslabs/aws-lambda-go-api-proxy v0.13.3 // indirect
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/gin-contrib/cors v1.4.0 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/gin-gonic/gin v1.8.1 // indirect

@@ -302,7 +302,7 @@ func scanHandler(c *gin.Context) {
 
 }
 
-func userHandler(c *gin.Context) {
+func userGetHandler(c *gin.Context) {
 	aws, err := getAWSSession()
 	if err != nil {
 		fmt.Println(err)
@@ -343,6 +343,18 @@ func userHandler(c *gin.Context) {
 		},
 		Body: string(marshalledUser),
 	})
+}
+
+func userPostHandler(c *gin.Context) {
+	aws, err := getAWSSession()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	secretsmanagerSvc = secretsmanager.New(aws)
+	ddbSvc = dynamodb.New(aws)
+
+	fmt.Println(c.Request.Header.Get("Authorization"))
 }
 
 func helloWorldHandler(c *gin.Context) {
@@ -399,7 +411,8 @@ func main() {
 
 	g.GET("/hello", corsMiddleware(), helloWorldHandler)
 
-	g.GET("/user", corsMiddleware(), jwtMiddleware, userHandler)
+	g.GET("/user", corsMiddleware(), jwtMiddleware, userGetHandler)
+	g.POST("/user", corsMiddleware(), jwtMiddleware, userPostHandler)
 	g.OPTIONS("/user", corsMiddleware(), corsPreflightHandler)
 	g.GET("/scan", corsMiddleware(), scanHandler)
 
