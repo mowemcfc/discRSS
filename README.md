@@ -38,6 +38,7 @@ make deploy
   - [x] call this lambda from cronned lambda
 - [x] make aws session global
 - [x] init lastCheckedTime in CDK as time.now()
+- [ ] fix autoscan
 - [ ] make as much of lambda async as possible
 - [ ] logging
   - [x] basic
@@ -47,9 +48,9 @@ make deploy
   - [x] login page
    - [x] make login page redirect to profile if already logged in
   - [x] auth0 integration
-  - [ ] display feeds via ddb fetch
+  - [x] display feeds via ddb fetch
     - [x] fetch data
-    - [ ] ui components
+    - [x] ui components
   - [ ] display channels via ddb fetch
   - [ ] allow putitem new feeds via frontend form 
   - [ ] putitem new channels via frontend form

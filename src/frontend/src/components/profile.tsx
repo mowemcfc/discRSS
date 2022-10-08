@@ -16,7 +16,7 @@ export const UserProfile = () => {
     <div>
       <img src={user?.picture} alt={user?.name} />
       <h2>{user?.name}</h2>
-      <p>{user?.email}</p>
+      <h2>{user?.email}</h2>
       <LogoutButton />
     </div>
   );
