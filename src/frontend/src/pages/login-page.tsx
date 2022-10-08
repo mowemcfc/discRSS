@@ -6,7 +6,7 @@ import { Navigate } from "react-router-dom";
 export const LoginPage = () => {
   const { isAuthenticated } = useAuth0();
   if (isAuthenticated) {
-    return <Navigate replace to="/" />
+    return <Navigate replace to="/account" />
   }
 
   return <LoginButton />;
