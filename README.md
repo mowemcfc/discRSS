@@ -48,7 +48,7 @@ make deploy
    - [x] make login page redirect to profile if already logged in
   - [x] auth0 integration
   - [ ] display feeds via ddb fetch
-    - [ ] fetch data
+    - [x] fetch data
     - [ ] ui components
   - [ ] display channels via ddb fetch
   - [ ] allow putitem new feeds via frontend form 

@@ -25,11 +25,6 @@ export const App: React.FC = () => {
           path="/account"
           element={<ProtectedRoute component={UserPage} />}
         />
-
-        <Route
-          path="/login"
-          element={<LoginPage />}
-        />
       </Routes>
     </BrowserRouter>
   );
