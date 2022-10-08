@@ -401,7 +401,7 @@ func main() {
 
 	g.GET("/user", corsMiddleware(), jwtMiddleware, userHandler)
 	g.OPTIONS("/user", corsMiddleware(), corsPreflightHandler)
-	g.GET("/scan", corsMiddleware(), jwtMiddleware, scanHandler)
+	g.GET("/scan", corsMiddleware(), scanHandler)
 
 	ginLambda = ginLambdaAdapter.New(g)
 	lambda.Start(Handler)

@@ -39,6 +39,7 @@ make deploy
 - [x] make aws session global
 - [x] init lastCheckedTime in CDK as time.now()
 - [ ] fix autoscan
+- [ ] figure out calling scan endpoint internally (probably just separate it into separate lambda)
 - [ ] make as much of lambda async as possible
 - [ ] logging
   - [x] basic
