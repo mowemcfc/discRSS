@@ -88,8 +88,9 @@ export class DiscRssStack extends Stack {
     appConfigTable.applyRemovalPolicy(RemovalPolicy.DESTROY)
     appConfigTable.grantReadWriteData(discRSSLambda.role!.grantPrincipal)
 
-    const currentTime = "2022-01-02T15:04:05Z07:00"
-    //const currentTime = new Date().toISOString()
+    // Use for debugging, if you want to test your feed update over a longer period
+    //const currentTime = "2022-01-02T15:04:05Z"
+    const currentTime = new Date().toISOString()
     const appConfigTableInitAction: cr.AwsSdkCall = {
       service: 'DynamoDB',
       action: 'putItem',
