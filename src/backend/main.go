@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"sync"
 	"time"
@@ -58,6 +59,8 @@ var ginLambda *ginLambdaAdapter.GinLambda
 
 var secretsmanagerSvc *secretsmanager.SecretsManager
 var ddbSvc *dynamodb.DynamoDB
+
+var isLocal bool
 
 const APP_NAME string = "discRSS"
 const APP_CONFIG_TABLE_NAME string = "discRSS-AppConfigs"
@@ -400,26 +403,41 @@ func corsMiddleware() gin.HandlerFunc {
 }
 
 func main() {
+	isLocal = os.Getenv("LAMBDA_TASK_ROOT") == ""
 
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
+		os.Exit(1)
 	}
 
 	g := gin.Default()
-	jwtMiddleware := adapter.Wrap(EnsureValidToken())
+	var jwtMiddleware gin.HandlerFunc
+	if isLocal {
+		jwtMiddleware = func(c *gin.Context) {}
+	} else {
+		jwtMiddleware = adapter.Wrap(EnsureValidToken())
+	}
 
+	log.Println("Configuring API methods")
 	g.GET("/hello", corsMiddleware(), helloWorldHandler)
-
 	g.GET("/user", corsMiddleware(), jwtMiddleware, userGetHandler)
 	g.POST("/user", corsMiddleware(), jwtMiddleware, userPostHandler)
 	g.OPTIONS("/user", corsMiddleware(), corsPreflightHandler)
 	g.GET("/scan", corsMiddleware(), scanHandler)
 
-	ginLambda = ginLambdaAdapter.New(g)
-	lambda.Start(Handler)
+	if isLocal {
+		log.Println("Inside LOCAL environment, using default router")
+		g.Run("0.0.0.0:9001")
+	} else {
+		log.Println("Inside REMOTE lambda environment, using ginLambda router")
+		ginLambda = ginLambdaAdapter.New(g)
+		lambda.Start(lambdaHandler)
+	}
 }
 
-func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+//func localHandler(ctx context.Context, request events.Lambda)
+
+func lambdaHandler(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	return ginLambda.ProxyWithContext(ctx, request)
 }
