@@ -6,15 +6,14 @@ import reportWebVitals from './reportWebVitals';
 
 import { Auth0Provider } from '@auth0/auth0-react'
 
-
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
 root.render(
   <Auth0Provider
-    domain='dev-2ivxxovk.us.auth0.com'
-    clientId='9uW9cERzpYN9OWbRaZHpokgunhexhGZd'
-    audience='https://cbiobsxi12.execute-api.ap-southeast-2.amazonaws.com/prod/'
+    domain={process.env.REACT_APP_AUTH0_DOMAIN!}
+    clientId={process.env.REACT_APP_AUTH0_CLIENT_ID!}
+    audience={process.env.REACT_APP_AUTH0_AUDIENCE!}
     redirectUri='http://localhost:3000/account'
   >
     <React.StrictMode>

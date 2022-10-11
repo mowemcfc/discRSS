@@ -18,7 +18,7 @@ export const UserPage = () => {
 
   
   useEffect(() => {
-    const url = 'https://cbiobsxi12.execute-api.ap-southeast-2.amazonaws.com/prod/'
+    const url = process.env.REACT_APP_APIGW_ENDPOINT!
     const fetchUser = async (id: number) => {
       const accessToken = await getAccessTokenSilently()
       const user = await fetch(`${url}user?userID=${id}`, {
