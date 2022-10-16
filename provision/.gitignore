@@ -4,5 +4,8 @@ cdk.out
 # my discord token :)
 local/discord_token.txt
 
+# my auth0 client secret :)
+local/auth0_client_secret.txt
+
 # synth testing output file
 synth.yml

@@ -111,6 +111,27 @@ export class DiscRssStack extends Stack {
       policy: cr.AwsCustomResourcePolicy.fromSdkCalls({ resources: cr.AwsCustomResourcePolicy.ANY_RESOURCE })
     })
 
+    const auth0ClientSecret = new secretsmanager.Secret(this, 'DiscRSS-Auth0ClientSecret', {
+      secretName: 'discRSS/auth0-client-secret'
+    })
+    auth0ClientSecret.grantRead(discRSSLambda.role!.grantPrincipal)
+
+    const putAuth0ClientSecretAction: cr.AwsSdkCall = {
+        service: 'SecretsManager',
+        action: 'putSecretValue',
+        parameters: {
+          SecretId: auth0ClientSecret.secretName,
+          SecretString: fs.readFileSync(path.join(__dirname, '../local/auth0_client_secret.txt'), { encoding: 'utf-8' })
+        },
+        physicalResourceId: cr.PhysicalResourceId.of(auth0ClientSecret.secretName + '_initialisation')
+    }
+
+    const auth0ClientSecretUpdateCr = new cr.AwsCustomResource(this, 'DiscRSS-Auth0ClientSecretUpdate', {
+      onCreate: putAuth0ClientSecretAction,
+      onUpdate: putAuth0ClientSecretAction,
+      policy: cr.AwsCustomResourcePolicy.fromSdkCalls({ resources: cr.AwsCustomResourcePolicy.ANY_RESOURCE }),
+    }) 
+
     const discordBotSecret = new secretsmanager.Secret(this, 'DiscRSS-DiscordBotSecret', {
       secretName: 'discRSS/discord-bot-secret',
     })
