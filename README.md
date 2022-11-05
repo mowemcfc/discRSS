@@ -52,10 +52,11 @@ make deploy
   - [x] display feeds via ddb fetch
     - [x] fetch data
     - [x] ui components
-  - [ ] display channels via ddb fetch
-  - [ ] allow putitem new feeds via frontend form 
+  - [x] display channels via ddb fetch
+  - [ ] allow putitem new feeds via frontend form  <--
   - [ ] putitem new channels via frontend form
 - [x] fix eventbridge call to lambda IOT use /scan endpoint
+- [ ] simplify timestamp parsing by removing format-specific logic, see time.Parse(layout, str)
 - [ ] split go into more files
 - [ ] consolidate .env files and other assorted local txt's
 - [ ] add .env placeholders throughout where used
