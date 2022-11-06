@@ -1,17 +1,13 @@
 package main
 
 import (
-	"context"
-	"encoding/json"
 	"fmt"
 	"log"
-	"net/http"
 	"os"
 	"strconv"
 	"sync"
 	"time"
 
-	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -19,13 +15,14 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
-	ginLambdaAdapter "github.com/awslabs/aws-lambda-go-api-proxy/gin"
 	"github.com/bwmarrin/discordgo"
-	"github.com/gin-gonic/gin"
-	adapter "github.com/gwatts/gin-adapter"
 	"github.com/joho/godotenv"
 	"github.com/mmcdole/gofeed"
 )
+
+type ScanRequestEvent struct {
+	UserID string `json:"userID"`
+}
 
 type Feed struct {
 	FeedID     int    `json:"feedID"`
@@ -54,8 +51,6 @@ type AppConfig struct {
 }
 
 var discRssConfig *AppConfig
-
-var ginLambda *ginLambdaAdapter.GinLambda
 
 var secretsmanagerSvc *secretsmanager.SecretsManager
 var ddbSvc *dynamodb.DynamoDB
@@ -220,21 +215,21 @@ func commentNewPosts(sess *discordgo.Session, wg *sync.WaitGroup, feed Feed, cha
 	parsedFeed, err := fp.ParseURL(feed.Url)
 
 	if err != nil {
-		fmt.Printf("unable to parse URL %s for feed %s: %s", feed.Url, feed.Title, err)
+		log.Printf("unable to parse URL %s for feed %s: %s", feed.Url, feed.Title, err)
 		return
 	}
 
 	lastChecked, err := time.Parse(discRssConfig.LastCheckedTimeFormat, discRssConfig.LastCheckedTime)
 
 	if err != nil {
-		fmt.Printf("unable to parse last_checked datetime string: %s", err)
+		log.Printf("unable to parse last_checked datetime string: %s", err)
 		return
 	}
 
 	for _, item := range parsedFeed.Items {
 		publishedTime, err := time.Parse(feed.TimeFormat, item.Published)
 		if err != nil {
-			fmt.Printf("unable to parse published_time datetime string for post %s in blog %s: %s", item.Title, feed.Title, err)
+			log.Printf("unable to parse published_time datetime string for post %s in blog %s: %s", item.Title, feed.Title, err)
 			return
 		}
 
@@ -242,16 +237,16 @@ func commentNewPosts(sess *discordgo.Session, wg *sync.WaitGroup, feed Feed, cha
 			var message string = fmt.Sprintf("**%s**\n%s\n", item.Title, item.Link)
 			for _, channel := range channelList {
 				if _, err := sess.ChannelMessageSend(strconv.Itoa(channel.ChannelID), message); err != nil {
-					fmt.Printf("error sending message: %s", err)
+					log.Printf("error sending message: %s", err)
 					return
 				}
-				fmt.Printf("successfully sent message: %s to channel: %s %d\n", message, channel.ChannelName, channel.ChannelID)
+				log.Printf("successfully sent message: %s to channel: %s %d\n", message, channel.ChannelName, channel.ChannelID)
 			}
 		}
 	}
 }
 
-func scanHandler(c *gin.Context) {
+func scanHandler(userID int) {
 	aws, err := getAWSSession()
 	if err != nil {
 		fmt.Println(err)
@@ -277,18 +272,13 @@ func scanHandler(c *gin.Context) {
 		return
 	}
 
-	requestUserID, err := strconv.Atoi(c.Request.URL.Query().Get("userID"))
+	log.Printf("userID: %d", userID)
+	user, err := fetchUser(aws, userID)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	fmt.Printf("userID: %d\n", requestUserID)
-
-	user, err := fetchUser(aws, requestUserID)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	log.Printf("user: %v", user)
 
 	// Initialise a WaitGroup that will spawn a goroutine per subscribed RSS feed to post all new content
 	var wg sync.WaitGroup
@@ -302,142 +292,29 @@ func scanHandler(c *gin.Context) {
 		fmt.Println(err)
 		return
 	}
-
 }
 
-func userGetHandler(c *gin.Context) {
-	aws, err := getAWSSession()
+func start(event ScanRequestEvent) {
+	err := godotenv.Load()
 	if err != nil {
-		fmt.Println(err)
-		return
+		log.Fatal("Error loading .env file, exiting")
+		os.Exit(1)
 	}
-	secretsmanagerSvc = secretsmanager.New(aws)
-	ddbSvc = dynamodb.New(aws)
 
-	requestUserID, err := strconv.Atoi(c.Request.URL.Query().Get("userID"))
+	userID, err := strconv.Atoi(event.UserID) 
 	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Printf("userID: %d\n", requestUserID)
-
-	user, err := fetchUser(aws, requestUserID)
-	if err != nil {
-		fmt.Println(err)
-		return
+		log.Fatal("Invalid userID, exiting")
 	}
 
-	fmt.Printf("user %d channels: %+v", user.UserID, user.ChannelList)
-	fmt.Printf("user %d feeds: %+v", user.UserID, user.FeedList)
-
-	marshalledUser, err := json.Marshal(user)
-	fmt.Printf("\nmarshalled: %s\n", string(marshalledUser))
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	c.Header("Access-Control-Allow-Origin", "http://localhost:3000")
-	c.JSON(http.StatusOK, events.APIGatewayProxyResponse{
-		StatusCode:      http.StatusOK,
-		IsBase64Encoded: false,
-		Headers: map[string]string{
-			"Content-Type": "application/json",
-		},
-		Body: string(marshalledUser),
-	})
-}
-
-func userPostHandler(c *gin.Context) {
-	aws, err := getAWSSession()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	secretsmanagerSvc = secretsmanager.New(aws)
-	ddbSvc = dynamodb.New(aws)
-
-	fmt.Println(c.Request.Header.Get("Authorization"))
-}
-
-func helloWorldHandler(c *gin.Context) {
-	c.JSON(http.StatusOK, events.APIGatewayProxyResponse{
-		StatusCode:      http.StatusOK,
-		IsBase64Encoded: false,
-		Headers: map[string]string{
-			"Content-Type": "application/json",
-		},
-		Body: "Hello, World!",
-	})
-}
-
-func corsPreflightHandler(c *gin.Context) {
-	c.JSON(http.StatusOK, events.APIGatewayProxyResponse{
-		StatusCode:      http.StatusOK,
-		IsBase64Encoded: false,
-		Headers: map[string]string{
-			"Content-Type": "application/json",
-		},
-		Body: "Hello from discRSS",
-	})
-}
-
-func notFoundHandler(c *gin.Context) {
-	c.JSON(http.StatusNotFound, events.APIGatewayProxyResponse{
-		StatusCode:      http.StatusNotFound,
-		IsBase64Encoded: false,
-		Headers: map[string]string{
-			"Content-Type": "application/json",
-		},
-		Body: fmt.Sprintf("Not Found: %s", c.Request.URL.Path),
-	})
-}
-
-func corsMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.Header("Access-Control-Allow-Origin", "http://localhost:3000")
-		c.Header("Access-Control-Allow-Methods", "POST, PATCH, PUT, GET, OPTIONS")
-		c.Header("Access-Control-Allow-Headers", "*, Authorization")
-		c.Header("Access-Control-Allow-Credentials", "true")
-	}
+	scanHandler(userID)
 }
 
 func main() {
 	isLocal = os.Getenv("LAMBDA_TASK_ROOT") == ""
-
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-		os.Exit(1)
-	}
-
-	g := gin.Default()
-	var jwtMiddleware gin.HandlerFunc
 	if isLocal {
-		jwtMiddleware = func(c *gin.Context) {}
+		start(ScanRequestEvent{UserID: "2"})
 	} else {
-		jwtMiddleware = adapter.Wrap(EnsureValidToken())
-	}
-
-	log.Println("Configuring API methods")
-	g.GET("/hello", corsMiddleware(), helloWorldHandler)
-	g.GET("/user", corsMiddleware(), jwtMiddleware, userGetHandler)
-	g.POST("/user", corsMiddleware(), jwtMiddleware, userPostHandler)
-	g.OPTIONS("/user", corsMiddleware(), corsPreflightHandler)
-	g.GET("/scan", corsMiddleware(), scanHandler)
-
-	if isLocal {
-		log.Println("Inside LOCAL environment, using default router")
-		g.Run("0.0.0.0:9001")
-	} else {
-		log.Println("Inside REMOTE lambda environment, using ginLambda router")
-		ginLambda = ginLambdaAdapter.New(g)
-		lambda.Start(lambdaHandler)
+		lambda.Start(start)
 	}
 }
 
-//func localHandler(ctx context.Context, request events.Lambda)
-
-func lambdaHandler(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	return ginLambda.ProxyWithContext(ctx, request)
-}
