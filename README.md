@@ -67,4 +67,3 @@ make deploy
   - [x] basic
   - [ ] allow proper scopes, createUser, getFeed
   - [ ] compare provided username against jwt sub, throw error if mismatch
-  - [ ]
