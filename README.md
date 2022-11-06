@@ -39,13 +39,10 @@ make deploy
 - [x] make aws session global
 - [x] init lastCheckedTime in CDK as time.now()
 - [x] fix autoscan
-- [ ] figure out calling scan endpoint internally (probably just separate it into separate lambda)
-- [ ] make as much of lambda async as possible
-- [ ] logging
-  - [x] basic
-  - [ ] structured
+- [x] figure out calling scan endpoint internally (probably just separate it into separate lambda)
+- [ ] clean up newly-separated go modules
 - [ ] tracing
-- [x] frontend
+- [ ] frontend
   - [x] login page
    - [x] make login page redirect to profile if already logged in
   - [x] auth0 integration
@@ -54,16 +51,20 @@ make deploy
     - [x] ui components
   - [x] display channels via ddb fetch
   - [ ] allow putitem new feeds via frontend form  <--
+    - [x] ui component
+    - [ ] onSubmit handler
+    - [ ] API route
   - [ ] putitem new channels via frontend form
 - [x] fix eventbridge call to lambda IOT use /scan endpoint
+- [x] add .env placeholders throughout where used
+- [ ] make as much of lambda async as possible
+- [ ] logging
+  - [x] basic
+  - [ ] structured
 - [ ] simplify timestamp parsing by removing format-specific logic, see time.Parse(layout, str)
-- [ ] split go into more files
 - [ ] consolidate .env files and other assorted local txt's
-- [ ] add .env placeholders throughout where used
 - [ ] lambda JWT auth
-  - [ ] basic
+  - [x] basic
   - [ ] allow proper scopes, createUser, getFeed
   - [ ] compare provided username against jwt sub, throw error if mismatch
   - [ ]
-- [ ] dev env w/ container etc
-  - [ ] deploy as container lambda?
