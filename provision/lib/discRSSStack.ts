@@ -7,11 +7,16 @@ import * as lambda from 'aws-cdk-lib/aws-lambda'
 import * as apigateway from 'aws-cdk-lib/aws-apigateway'
 import * as eventbridge from 'aws-cdk-lib/aws-events'
 import * as eventtargets from 'aws-cdk-lib/aws-events-targets'
+import * as acm from 'aws-cdk-lib/aws-certificatemanager'
+import * as route53 from 'aws-cdk-lib/aws-route53'
+import * as targets from 'aws-cdk-lib/aws-route53-targets'
+
 import * as fs from 'fs';
 import * as path from 'path';
 import { ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 
 import 'datejs'
+import { TargetTrackingScalingPolicy } from 'aws-cdk-lib/aws-applicationautoscaling';
 
 export class DiscRssStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -46,10 +51,32 @@ export class DiscRssStack extends Stack {
       timeout: Duration.seconds(60)
     })
 
+    const discRSSHostedZone = route53.HostedZone.fromHostedZoneAttributes(this, 'discRSS-HostedZone', {
+      zoneName: 'discrss.com',
+      hostedZoneId: 'Z01872172J0T33M526LB9'
+    })
+
+    const apiCertificate = new acm.Certificate(this, 'discRSS-Certificate', {
+      domainName: 'discrss.com',
+      subjectAlternativeNames: [ '*.discrss.com' ],
+      validation: acm.CertificateValidation.fromDns(discRSSHostedZone)
+    })
+
+
     const discRSSApi = new apigateway.LambdaRestApi(this, 'DiscRSS-API', {
       handler: apiLambda,
       deploy: true,
       proxy: true,
+      domainName: {
+        domainName: 'discrss.com',
+        certificate: apiCertificate
+      }
+    })
+
+    const apiDnsRecord = new route53.ARecord(this, 'discRSS-ApiDnsRecord', {
+      zone: discRSSHostedZone,
+      recordName: 'discrss.com',
+      target: route53.RecordTarget.fromAlias(new targets.ApiGateway(discRSSApi))
     })
 
     apiLambda.addPermission('DiscRSS-AllowAPIGWInvocation', {

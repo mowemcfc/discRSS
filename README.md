@@ -55,6 +55,7 @@ make deploy
     - [ ] onSubmit handler
     - [ ] API route
   - [ ] putitem new channels via frontend form
+- [ ] create DNS endpoint for API
 - [x] fix eventbridge call to lambda IOT use /scan endpoint
 - [x] add .env placeholders throughout where used
 - [ ] make as much of lambda async as possible
