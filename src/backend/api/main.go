@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"sync"
 	"time"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -20,11 +19,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	ginLambdaAdapter "github.com/awslabs/aws-lambda-go-api-proxy/gin"
-	"github.com/bwmarrin/discordgo"
 	"github.com/gin-gonic/gin"
 	adapter "github.com/gwatts/gin-adapter"
 	"github.com/joho/godotenv"
-	"github.com/mmcdole/gofeed"
 )
 
 type Feed struct {
@@ -109,39 +106,6 @@ func fetchAppConfig(sess *session.Session, appName string) (*AppConfig, error) {
 	return &unmarshalled, nil
 }
 
-func fetchDiscordToken(sess *session.Session) (string, error) {
-
-	input := &secretsmanager.GetSecretValueInput{
-		SecretId: aws.String(BOT_TOKEN_SECRET_NAME),
-	}
-
-	result, err := secretsmanagerSvc.GetSecretValue(input)
-	if err != nil {
-		if aerr, ok := err.(awserr.Error); ok {
-			switch aerr.Code() {
-			case secretsmanager.ErrCodeResourceNotFoundException:
-				return "", fmt.Errorf("%s %s", secretsmanager.ErrCodeResourceNotFoundException, aerr.Error())
-			case secretsmanager.ErrCodeInvalidParameterException:
-				return "", fmt.Errorf("%s %s", secretsmanager.ErrCodeInvalidParameterException, aerr.Error())
-			case secretsmanager.ErrCodeInvalidRequestException:
-				return "", fmt.Errorf("%s %s", secretsmanager.ErrCodeInvalidRequestException, aerr.Error())
-			case secretsmanager.ErrCodeDecryptionFailure:
-				return "", fmt.Errorf("%s %s", secretsmanager.ErrCodeDecryptionFailure, aerr.Error())
-			case secretsmanager.ErrCodeInternalServiceError:
-				return "", fmt.Errorf("%s %s", secretsmanager.ErrCodeInternalServiceError, aerr.Error())
-			default:
-				return "", fmt.Errorf("%s", aerr.Error())
-			}
-		} else {
-			return "", fmt.Errorf(fmt.Sprintln(err.Error()))
-		}
-	}
-
-	fmt.Println("successfully fetched discord token")
-
-	return *result.SecretString, nil
-}
-
 func fetchUser(sess *session.Session, userID int) (*UserAccount, error) {
 
 	getUserInput := &dynamodb.GetItemInput{
@@ -211,98 +175,6 @@ func updateLastCheckedTime(sess *session.Session, t time.Time) error {
 	log.Printf("successfully updated last checked time: %s\n", formatted)
 
 	return nil
-}
-
-func commentNewPosts(sess *discordgo.Session, wg *sync.WaitGroup, feed Feed, channelList []DiscordChannel) {
-	defer wg.Done()
-	fp := gofeed.NewParser()
-
-	parsedFeed, err := fp.ParseURL(feed.Url)
-
-	if err != nil {
-		log.Printf("unable to parse URL %s for feed %s: %s", feed.Url, feed.Title, err)
-		return
-	}
-
-	lastChecked, err := time.Parse(discRssConfig.LastCheckedTimeFormat, discRssConfig.LastCheckedTime)
-
-	if err != nil {
-		log.Printf("unable to parse last_checked datetime string: %s", err)
-		return
-	}
-
-	for _, item := range parsedFeed.Items {
-		publishedTime, err := time.Parse(feed.TimeFormat, item.Published)
-		if err != nil {
-			log.Printf("unable to parse published_time datetime string for post %s in blog %s: %s", item.Title, feed.Title, err)
-			return
-		}
-
-		if publishedTime.After(lastChecked) {
-			var message string = fmt.Sprintf("**%s**\n%s\n", item.Title, item.Link)
-			for _, channel := range channelList {
-				if _, err := sess.ChannelMessageSend(strconv.Itoa(channel.ChannelID), message); err != nil {
-					log.Printf("error sending message: %s", err)
-					return
-				}
-				log.Printf("successfully sent message: %s to channel: %s %d\n", message, channel.ChannelName, channel.ChannelID)
-			}
-		}
-	}
-}
-
-func scanHandler(c *gin.Context) {
-	aws, err := getAWSSession()
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	secretsmanagerSvc = secretsmanager.New(aws)
-	ddbSvc = dynamodb.New(aws)
-
-	discRssConfig, err = fetchAppConfig(aws, "discRSS")
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	discordToken, err := fetchDiscordToken(aws)
-	if err != nil {
-		log.Println(err)
-	}
-
-	discord, err := getDiscordSession(discordToken)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	requestUserID, err := strconv.Atoi(c.Request.URL.Query().Get("userID"))
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	fmt.Printf("userID: %d\n", requestUserID)
-
-	user, err := fetchUser(aws, requestUserID)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	// Initialise a WaitGroup that will spawn a goroutine per subscribed RSS feed to post all new content
-	var wg sync.WaitGroup
-	for _, feed := range user.FeedList {
-		wg.Add(1)
-		go commentNewPosts(discord, &wg, feed, user.ChannelList)
-	}
-	wg.Wait()
-
-	if err := updateLastCheckedTime(aws, time.Now()); err != nil {
-		log.Println(err)
-		return
-	}
-
 }
 
 func userGetHandler(c *gin.Context) {
@@ -424,7 +296,6 @@ func main() {
 	g.GET("/user", corsMiddleware(), jwtMiddleware, userGetHandler)
 	g.POST("/user", corsMiddleware(), jwtMiddleware, userPostHandler)
 	g.OPTIONS("/user", corsMiddleware(), corsPreflightHandler)
-	g.GET("/scan", corsMiddleware(), scanHandler)
 
 	if isLocal {
 		log.Println("Inside LOCAL environment, using default router")
