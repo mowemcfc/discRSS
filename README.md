@@ -40,7 +40,7 @@ make deploy
 - [x] init lastCheckedTime in CDK as time.now()
 - [x] fix autoscan
 - [x] figure out calling scan endpoint internally (probably just separate it into separate lambda)
-- [ ] clean up newly-separated go modules
+- [x] clean up newly-separated go modules
 - [ ] tracing
 - [ ] frontend
   - [x] login page
