@@ -25,12 +25,12 @@ export const NewFeedRow = () => {
           <td
             className="w-3/12 px-6 py-4"
           >
-            <input type="text" placeholder="Feed Name"/>
+            <input type="text" name="feedName" placeholder="Feed Name"/>
           </td>
           <td
             className="w-3/12 px-6 py-4"
           >
-            <input type="text" placeholder="Feed URL"/>
+            <input type="text" name="feedUrl" placeholder="Feed URL"/>
           </td>
           <td
             className="w-3/12 px-6 py-4"

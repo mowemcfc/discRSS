@@ -50,7 +50,7 @@ export const UserPage = () => {
       </div>
       <div className="bg-slate-200 mx-auto px-4 py-32 lg:items-center h-screen">
         <UserProfile />
-        <UserModal userAccount={ account }/>
+        <UserModal/>
       </div>
     </div>
   )

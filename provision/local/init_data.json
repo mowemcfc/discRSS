@@ -14,7 +14,7 @@
               {
                 "M": {
                   "feedID": {
-                    "N": "1"
+                    "N": "0"
                   },
                   "title": {
                     "S": "The Future Does Not Fit In The Containers Of The Past"
@@ -30,7 +30,7 @@
               {
                 "M": {
                   "feedID": {
-                    "N": "2"
+                    "N": "1"
                   },
                   "title": {
                     "S": "Dan Luu"
@@ -92,7 +92,7 @@
               {
                 "M": {
                   "feedID": {
-                    "N": "1"
+                    "N": "0"
                   },
                   "title": {
                     "S": "The Future Does Not Fit In The Containers Of The Past"
@@ -108,7 +108,7 @@
               {
                 "M": {
                   "feedID": {
-                    "N": "2"
+                    "N": "1"
                   },
                   "title": {
                     "S": "Dan Luu"

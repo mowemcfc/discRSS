@@ -52,14 +52,16 @@ make deploy
   - [x] display channels via ddb fetch
   - [ ] allow putitem new feeds via frontend form  <--
     - [x] ui component
-    - [ ] onSubmit handler
-    - [ ] API route
+    - [x] onSubmit handler
+      - [x] local data
+      - [ ] post request to API route
   - [ ] putitem new channels via frontend form
 - [x] create DNS endpoint for API
-  - [ ] update frontend refs
+  - [x] update frontend refs
 - [x] fix eventbridge call to lambda IOT use /scan endpoint
 - [x] add .env placeholders throughout where used
 - [ ] make as much of lambda async as possible
+- [ ] user POST handler
 - [ ] logging
   - [x] basic
   - [ ] structured

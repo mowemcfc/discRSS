@@ -1,12 +1,40 @@
-import { UserAccount, Feed } from '../types/user'
+import { UserAccount, Feed, DiscordChannel } from '../types/user'
 import { FeedRow, NewFeedRow } from './feed-row'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useAuth0 } from "@auth0/auth0-react";
+import { setConstantValue } from 'typescript';
 
-export const UserModal = (props: { userAccount: UserAccount }) => {
+export const UserModal = () => {
+  const {
+    getAccessTokenSilently,
+  } = useAuth0();
 
-  const [numRows, setNumRows] = useState(props.userAccount.feedList.length)
+  const [user, setUser] = useState<UserAccount>({ userID: -1, username: '', feedList: [], channelList: [] })
 
-  if (!props.userAccount) {
+  //const [userId, setUserId] = useState(-1)
+  //const [username, setUsername] = useState('')
+  //const [feeds, setFeeds] = useState<Feed[]>([])
+  //const [channels, setChannels] = useState<DiscordChannel[]>([])
+  
+  useEffect(() => {
+    const url = process.env.REACT_APP_APIGW_ENDPOINT!
+    const fetchUser = async (id: number) => {
+      const accessToken = await getAccessTokenSilently()
+      const resp = await fetch(`${url}user?userID=${id}`, {
+        headers: {
+          authorization: `Bearer ${accessToken}`
+        },
+      })
+        .then(res => { return res.json() })
+        .then(data => { return JSON.parse(data["body"]) })
+
+      setUser(resp)
+    }
+
+    fetchUser(2)
+  }, [])
+
+  if (!user) {
     return (
       <div>
         <div>Loading your user account ...</div>
@@ -14,15 +42,26 @@ export const UserModal = (props: { userAccount: UserAccount }) => {
     )
   }
 
-  const accountRows  = (feedList: Feed[]) => feedList.map((feed: Feed) => {
+  const accountRows = (feedList: Feed[]) => feedList.map((feed: Feed) => {
     return (
       <FeedRow key={`FeedRow-${feed.feedID}`} feed={feed} />
     )
   })
 
-  const submitForm = (event: React.FormEvent) => {
+  const submitForm = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    return null
+    const newFeed: Feed = {
+      feedID: user.feedList.length + 1,
+      title: (event.currentTarget.elements.namedItem('feedName') as HTMLInputElement).value,
+      url: (event.currentTarget.elements.namedItem('feedUrl') as HTMLInputElement).value,
+      timeFormat: '123'
+    }
+
+    const updatedUser: UserAccount = Object.assign({}, user)
+    updatedUser.feedList = updatedUser.feedList.concat(newFeed)
+    
+    console.log(`Submitted form: \n name: ${newFeed.title}\n url: ${newFeed.url}\n id: ${newFeed.feedID}\n timeformat: ${newFeed.timeFormat}`)
+    setUser(updatedUser)
   }
 
   return (
@@ -30,7 +69,7 @@ export const UserModal = (props: { userAccount: UserAccount }) => {
         <form onSubmit={event => submitForm(event)}>
           <table className="divide-y divide-gray-200">
             <thead
-              key={`FeedTableHeader-${props.userAccount.userID}`} 
+              key={`FeedTableHeader-${user.userID}`} 
             >
               <tr>
                 <td
@@ -63,8 +102,10 @@ export const UserModal = (props: { userAccount: UserAccount }) => {
                 </td>
               </tr>
             </thead>
-            <tbody key={`FeedTableBody-${props.userAccount.userID}`} className="divide-y divide-gray-200">
-              {accountRows(props.userAccount.feedList)}
+            <tbody key={`FeedTableBody-${user.userID}`} className="divide-y divide-gray-200">
+              {user?.feedList.map((feed: Feed) => {
+                return <FeedRow key={`FeedRow-${feed.feedID}`} feed={feed} />
+              })}
               <NewFeedRow />
             </tbody>
           </table>
