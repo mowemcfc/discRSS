@@ -68,14 +68,14 @@ export class DiscRssStack extends Stack {
       deploy: true,
       proxy: true,
       domainName: {
-        domainName: 'discrss.com',
+        domainName: 'api.discrss.com',
         certificate: apiCertificate
       }
     })
 
     const apiDnsRecord = new route53.ARecord(this, 'discRSS-ApiDnsRecord', {
       zone: discRSSHostedZone,
-      recordName: 'discrss.com',
+      recordName: 'api.discrss.com',
       target: route53.RecordTarget.fromAlias(new targets.ApiGateway(discRSSApi))
     })
 
