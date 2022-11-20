@@ -29,41 +29,39 @@ export const UserModal = (props: { userAccount: UserAccount }) => {
     <div className="overflow-hidden border rounded-lg">
         <form onSubmit={event => submitForm(event)}>
           <table className="divide-y divide-gray-200">
-            <thead key={`FeedTableHeader-${props.userAccount.userID}`} >
-              <th
-                scope="col"
-                className="w-1/12 py-3 text-xs font-bold text-left text-gray-500 uppercase"
-              >
-                Feed ID
-              </th>
+            <thead
+              key={`FeedTableHeader-${props.userAccount.userID}`} 
+            >
+              <tr>
+                <td
+                  className="w-1/12 py-3 text-xs font-bold text-left text-gray-500 uppercase"
+                >
+                  Feed ID
+                </td>
 
-              <th
-                scope="col"
-                className="w-4/12 px-6 py-3 text-xs font-bold text-left text-gray-500 uppercase"
-              >
-                Feed Name
-              </th>
+                <td
+                  className="w-4/12 px-6 py-3 text-xs font-bold text-left text-gray-500 uppercase"
+                >
+                  Feed Name
+                </td>
 
-              <th
-                scope="col"
-                className="w-3/12 px-6 py-3 text-xs font-bold text-left text-gray-500 uppercase"
-              >
-                Feed URL
-              </th>
+                <td
+                  className="w-3/12 px-6 py-3 text-xs font-bold text-left text-gray-500 uppercase"
+                >
+                  Feed URL
+                </td>
 
-              <th
-                scope="col"
-                className="w-3/12 px-6 py-3 text-xs font-bold text-left text-gray-500 uppercase"
-              >
-                Feed Timestamp
-              </th>
-              <th
-                scope="col"
-                className="w-1/12 py-3 text-xs font-bold text-left text-gray-500 uppercase"
-              >
-                &nbsp;
-              </th>
-
+                <td
+                  className="w-3/12 px-6 py-3 text-xs font-bold text-left text-gray-500 uppercase"
+                >
+                  Feed Timestamp
+                </td>
+                <td
+                  className="w-1/12 py-3 text-xs font-bold text-left text-gray-500 uppercase"
+                >
+                  &nbsp;
+                </td>
+              </tr>
             </thead>
             <tbody key={`FeedTableBody-${props.userAccount.userID}`} className="divide-y divide-gray-200">
               {accountRows(props.userAccount.feedList)}
