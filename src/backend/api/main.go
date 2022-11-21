@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"time"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -25,14 +24,14 @@ import (
 )
 
 type Feed struct {
-	FeedID     int    `json:"feedID"`
+	FeedID     int    `json:"feedId"`
 	Title      string `json:"title"`
 	Url        string `json:"url"`
 	TimeFormat string `json:"timeFormat"`
 }
 
 type UserAccount struct {
-	UserID      int              `json:"userID"`
+	UserID      int              `json:"userId"`
 	Username    string           `json:"username"`
 	FeedList    []Feed           `json:"feedList"`
 	ChannelList []DiscordChannel `json:"channelList"`
@@ -54,6 +53,7 @@ var discRssConfig *AppConfig
 
 var ginLambda *ginLambdaAdapter.GinLambda
 
+var awsSession *session.Session
 var secretsmanagerSvc *secretsmanager.SecretsManager
 var ddbSvc *dynamodb.DynamoDB
 
@@ -64,7 +64,7 @@ const APP_CONFIG_TABLE_NAME string = "discRSS-AppConfigs"
 const USER_TABLE_NAME string = "discRSS-UserRecords"
 const BOT_TOKEN_SECRET_NAME string = "discRSS/discord-bot-secret"
 
-func fetchAppConfig(sess *session.Session, appName string) (*AppConfig, error) {
+func fetchAppConfig(appName string) (*AppConfig, error) {
 
 	getAppConfigInput := &dynamodb.GetItemInput{
 		Key: map[string]*dynamodb.AttributeValue{
@@ -106,7 +106,7 @@ func fetchAppConfig(sess *session.Session, appName string) (*AppConfig, error) {
 	return &unmarshalled, nil
 }
 
-func fetchUser(sess *session.Session, userID int) (*UserAccount, error) {
+func fetchUser(userID int) (*UserAccount, error) {
 
 	getUserInput := &dynamodb.GetItemInput{
 		Key: map[string]*dynamodb.AttributeValue{
@@ -148,52 +148,58 @@ func fetchUser(sess *session.Session, userID int) (*UserAccount, error) {
 	return &unmarshalled, nil
 }
 
-func updateLastCheckedTime(sess *session.Session, t time.Time) error {
-	formatted := t.Format(discRssConfig.LastCheckedTimeFormat)
-
-	updateTimeInput := &dynamodb.UpdateItemInput{
-		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
-			":t": {
-				S: aws.String(formatted),
-			},
-		},
-		Key: map[string]*dynamodb.AttributeValue{
-			"appName": {
-				S: aws.String(discRssConfig.AppName),
-			},
-		},
-		ReturnValues:     aws.String("UPDATED_NEW"),
-		UpdateExpression: aws.String("set lastCheckedTime = :t"),
-		TableName:        aws.String(APP_CONFIG_TABLE_NAME),
-	}
-
-	_, err := ddbSvc.UpdateItem(updateTimeInput)
+func putUser(user *UserAccount) error {
+	marshalledUser, err := dynamodbattribute.MarshalMap(user)
 	if err != nil {
-		return fmt.Errorf("error updating last checked time: %s", err)
+		return fmt.Errorf(err.Error())
 	}
 
-	log.Printf("successfully updated last checked time: %s\n", formatted)
+	input := &dynamodb.PutItemInput{
+		Item:                   marshalledUser,
+		ReturnConsumedCapacity: aws.String("TOTAL"),
+		TableName:              aws.String(USER_TABLE_NAME),
+	}
+
+	_, err = ddbSvc.PutItem(input)
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case dynamodb.ErrCodeConditionalCheckFailedException:
+				return fmt.Errorf(dynamodb.ErrCodeConditionalCheckFailedException, aerr.Error())
+			case dynamodb.ErrCodeProvisionedThroughputExceededException:
+				return fmt.Errorf(dynamodb.ErrCodeProvisionedThroughputExceededException, aerr.Error())
+			case dynamodb.ErrCodeResourceNotFoundException:
+				return fmt.Errorf(dynamodb.ErrCodeResourceNotFoundException, aerr.Error())
+			case dynamodb.ErrCodeItemCollectionSizeLimitExceededException:
+				return fmt.Errorf(dynamodb.ErrCodeItemCollectionSizeLimitExceededException, aerr.Error())
+			case dynamodb.ErrCodeTransactionConflictException:
+				return fmt.Errorf(dynamodb.ErrCodeTransactionConflictException, aerr.Error())
+			case dynamodb.ErrCodeRequestLimitExceeded:
+				return fmt.Errorf(dynamodb.ErrCodeRequestLimitExceeded, aerr.Error())
+			case dynamodb.ErrCodeInternalServerError:
+				return fmt.Errorf(dynamodb.ErrCodeInternalServerError, aerr.Error())
+			default:
+				return fmt.Errorf(aerr.Error())
+			}
+		} else {
+			// Print the error, cast err to awserr.Error to get the Code and
+			// Message from an error.
+			return fmt.Errorf(err.Error())
+		}
+	}
 
 	return nil
 }
 
 func userGetHandler(c *gin.Context) {
-	aws, err := getAWSSession()
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	secretsmanagerSvc = secretsmanager.New(aws)
-	ddbSvc = dynamodb.New(aws)
-
-	requestUserID, err := strconv.Atoi(c.Request.URL.Query().Get("userID"))
+	requestUserID, err := strconv.Atoi(c.Request.URL.Query().Get("userId"))
 	if err != nil {
 		log.Println(err)
 		return
 	}
 	log.Printf("userID: %d\n", requestUserID)
 
-	user, err := fetchUser(aws, requestUserID)
+	user, err := fetchUser(requestUserID)
 	if err != nil {
 		log.Println(err)
 		return
@@ -221,15 +227,48 @@ func userGetHandler(c *gin.Context) {
 }
 
 func userPostHandler(c *gin.Context) {
-	aws, err := getAWSSession()
+
+	// TODO: Error handling
+	//	- IDOR
+	//  - gracefully send error response
+
+	var createUserParams UserAccount
+	err := c.BindJSON(&createUserParams)
 	if err != nil {
 		log.Println(err)
 		return
 	}
-	secretsmanagerSvc = secretsmanager.New(aws)
-	ddbSvc = dynamodb.New(aws)
 
-	log.Println(c.Request.Header.Get("Authorization"))
+	user, err := fetchUser(createUserParams.UserID) // TODO: replace with request body userId
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	log.Println(createUserParams.UserID)
+	log.Printf("%v", user)
+
+	marshalledUser, err := json.Marshal(createUserParams)
+	log.Printf("\nmarshalled: %s\n", string(marshalledUser))
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	err = putUser(&createUserParams)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, events.APIGatewayProxyResponse{
+		StatusCode:      http.StatusOK,
+		IsBase64Encoded: false,
+		Headers: map[string]string{
+			"Content-Type": "application/json",
+		},
+		Body: string(marshalledUser),
+	})
 }
 
 func helloWorldHandler(c *gin.Context) {
@@ -294,8 +333,16 @@ func main() {
 	log.Println("Configuring API methods")
 	g.GET("/hello", corsMiddleware(), helloWorldHandler)
 	g.GET("/user", corsMiddleware(), jwtMiddleware, userGetHandler)
-	g.POST("/user", corsMiddleware(), jwtMiddleware, userPostHandler)
+	g.POST("/user", corsMiddleware(), userPostHandler)
 	g.OPTIONS("/user", corsMiddleware(), corsPreflightHandler)
+
+	awsSession, err := getAWSSession()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	ddbSvc = dynamodb.New(awsSession)
+	secretsmanagerSvc = secretsmanager.New(awsSession)
 
 	if isLocal {
 		log.Println("Inside LOCAL environment, using default router")

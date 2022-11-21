@@ -3,7 +3,7 @@
     {
       "PutRequest": {
         "Item": {
-          "userID": {
+          "userId": {
             "N": "1"
           },
           "username": {
@@ -29,7 +29,7 @@
               },
               {
                 "M": {
-                  "feedID": {
+                  "feedId": {
                     "N": "1"
                   },
                   "title": {
@@ -49,7 +49,7 @@
             "L": [
               {
                 "M": {
-                  "channelID": {
+                  "channelId": {
                     "N": "985831956203851786"
                   },
                   "channelName": {
@@ -62,7 +62,7 @@
               },
               {
                 "M": {
-                  "channelID": {
+                  "channelId": {
                     "N": "958948046606053406"
                   },
                   "channelName": {
@@ -81,7 +81,7 @@
     {
       "PutRequest": {
         "Item": {
-          "userID": {
+          "userId": {
             "N": "2"
           },
           "username": {
@@ -91,7 +91,7 @@
             "L": [
               {
                 "M": {
-                  "feedID": {
+                  "feedId": {
                     "N": "0"
                   },
                   "title": {
@@ -107,7 +107,7 @@
               },
               {
                 "M": {
-                  "feedID": {
+                  "feedId": {
                     "N": "1"
                   },
                   "title": {
@@ -127,7 +127,7 @@
             "L": [
               {
                 "M": {
-                  "channelID": {
+                  "channelId": {
                     "N": "985831956203851786"
                   },
                   "channelName": {
@@ -140,7 +140,7 @@
               },
               {
                 "M": {
-                  "channelID": {
+                  "channelId": {
                     "N": "958948046606053406"
                   },
                   "channelName": {

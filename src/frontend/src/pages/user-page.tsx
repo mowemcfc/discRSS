@@ -14,27 +14,6 @@ export const UserPage = () => {
     getAccessTokenSilently,
   } = useAuth0();
 
-  const [account, setAccount] = useState<UserAccount>({ userID: -1, username: '', feedList: [], channelList: [] })
-
-  
-  useEffect(() => {
-    const url = process.env.REACT_APP_APIGW_ENDPOINT!
-    const fetchUser = async (id: number) => {
-      const accessToken = await getAccessTokenSilently()
-      const user = await fetch(`${url}user?userID=${id}`, {
-        headers: {
-          authorization: `Bearer ${accessToken}`
-        },
-      })
-        .then(res => { return res.json() })
-        .then(data => { return JSON.parse(data["body"]) })
-
-      setAccount(user)
-    }
-
-    fetchUser(1)
-  }, [user?.email, getAccessTokenSilently])
-
   if (isLoading) {
     return <div> Loading your user profile... </div>
   }

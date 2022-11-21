@@ -87,7 +87,7 @@ export class DiscRssStack extends Stack {
     const userTable = new dynamodb.Table(this, 'DiscRSS-UserTable', {
       tableName: 'discRSS-UserRecords',
       partitionKey: {
-        name: 'userID',
+        name: 'userId',
         type: dynamodb.AttributeType.NUMBER
       }
     })
