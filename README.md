@@ -16,6 +16,7 @@ make deploy
 
 ### Priority
 
+- [ ] introduce more granular routes to API handlers e.g. user -> user/feed, user/channel
 - [ ] add feed button
   - [x] ui component
   - [x] onSubmit handler
@@ -23,12 +24,17 @@ make deploy
     - [x] post request to API route
   - [x] backend handler
 - [ ] remove feed button
+  - [ ] ui component
+  - [ ] onsubmit handler
+    - [ ] post request to API route
+    - [ ] set local state
+  - [ ] backend handler
 - [ ] simplify timestamp parsing by removing format-specific logic, see time.Parse(layout, str)
 - [ ] remove timestamp from frontend
-- [ ] validated submitted feed are indeed valid RSS
 
 ### Backlog 
 
+- [ ] validate submitted feed are indeed valid RSS
 - [ ] tracing
 - [ ] make as much of lambda async as possible
 - [ ] logging

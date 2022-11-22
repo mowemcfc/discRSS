@@ -190,7 +190,7 @@ func putUser(user *UserAccount) error {
 	return nil
 }
 
-func userGetHandler(c *gin.Context) {
+func getUserHandler(c *gin.Context) {
 	requestUserID, err := strconv.Atoi(c.Request.URL.Query().Get("userId"))
 	if err != nil {
 		log.Println(err)
@@ -225,7 +225,7 @@ func userGetHandler(c *gin.Context) {
 	})
 }
 
-func userPostHandler(c *gin.Context) {
+func addUserHandler(c *gin.Context) {
 
 	// TODO: Error handling
 	//	- IDOR
@@ -296,13 +296,11 @@ func notFoundHandler(c *gin.Context) {
 	})
 }
 
-func corsMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.Header("Access-Control-Allow-Origin", "http://localhost:3000")
-		c.Header("Access-Control-Allow-Methods", "POST, PATCH, PUT, GET, OPTIONS")
-		c.Header("Access-Control-Allow-Headers", "*, Authorization")
-		c.Header("Access-Control-Allow-Credentials", "true")
-	}
+func corsMiddleware(c *gin.Context) {
+	c.Header("Access-Control-Allow-Origin", "http://localhost:3000")
+	c.Header("Access-Control-Allow-Methods", "POST, PATCH, PUT, GET, OPTIONS")
+	c.Header("Access-Control-Allow-Headers", "*, Authorization")
+	c.Header("Access-Control-Allow-Credentials", "true")
 }
 
 func main() {
@@ -323,10 +321,17 @@ func main() {
 	}
 
 	log.Println("Configuring API methods")
-	g.GET("/hello", corsMiddleware(), helloWorldHandler)
-	g.GET("/user", corsMiddleware(), jwtMiddleware, userGetHandler)
-	g.POST("/user", corsMiddleware(), userPostHandler)
-	g.OPTIONS("/user", corsMiddleware(), corsPreflightHandler)
+	g.GET("/hello", corsMiddleware, helloWorldHandler)
+
+	userRoute := g.Group("/user")
+	{
+		userRoute.GET("", corsMiddleware, jwtMiddleware, getUserHandler)
+		userRoute.POST("", corsMiddleware, jwtMiddleware, addUserHandler)
+		userRoute.OPTIONS("", corsMiddleware, corsPreflightHandler)
+
+		userRoute.GET("/feeds", corsMiddleware, jwtMiddleware)
+		userRoute.POST("/feeds", corsMiddleware, jwtMiddleware)
+	}
 
 	awsSession, err := getAWSSession()
 	if err != nil {
