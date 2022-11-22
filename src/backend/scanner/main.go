@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/araddon/dateparse"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -89,15 +90,12 @@ func fetchAppConfig(sess *session.Session, appName string) (*AppConfig, error) {
 				return nil, fmt.Errorf("%s", aerr.Error())
 			}
 		} else {
-			// Print the error, cast err to awserr.Error to get the Code and
-			// Message from an error.
 			return nil, fmt.Errorf(err.Error())
 		}
 	}
 
 	unmarshalled := AppConfig{}
-	err = dynamodbattribute.UnmarshalMap(config.Item, &unmarshalled)
-	if err != nil {
+	if err = dynamodbattribute.UnmarshalMap(config.Item, &unmarshalled); err != nil {
 		return nil, fmt.Errorf("error unmarshalling returned appconfig item: %s", err)
 	}
 
@@ -141,7 +139,7 @@ func fetchUser(sess *session.Session, userID int) (*UserAccount, error) {
 
 	getUserInput := &dynamodb.GetItemInput{
 		Key: map[string]*dynamodb.AttributeValue{
-			"userID": {
+			"userId": {
 				N: aws.String(strconv.Itoa(userID)),
 			},
 		},
@@ -227,7 +225,7 @@ func commentNewPosts(sess *discordgo.Session, wg *sync.WaitGroup, feed Feed, cha
 	}
 
 	for _, item := range parsedFeed.Items {
-		publishedTime, err := time.Parse(feed.TimeFormat, item.Published)
+		publishedTime, err := dateparse.ParseAny(item.Published)
 		if err != nil {
 			log.Printf("unable to parse published_time datetime string for post %s in blog %s: %s", item.Title, feed.Title, err)
 			return
@@ -249,7 +247,7 @@ func commentNewPosts(sess *discordgo.Session, wg *sync.WaitGroup, feed Feed, cha
 func scanHandler(userID int) {
 	aws, err := getAWSSession()
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("error opening AWS session", err)
 		return
 	}
 	secretsmanagerSvc = secretsmanager.New(aws)
@@ -257,25 +255,25 @@ func scanHandler(userID int) {
 
 	discRssConfig, err = fetchAppConfig(aws, "discRSS")
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("error fetching appconfig from DDB: ", err)
 		return
 	}
 
 	discordToken, err := fetchDiscordToken(aws)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("error fetching discord token from AWS: ", err)
 	}
 
 	discord, err := getDiscordSession(discordToken)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("error opening discord session: ", err)
 		return
 	}
 
 	log.Printf("userID: %d", userID)
 	user, err := fetchUser(aws, userID)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("error fetching user from DDB: ", err)
 		return
 	}
 	log.Printf("user: %v", user)
@@ -297,11 +295,11 @@ func scanHandler(userID int) {
 func start(event ScanRequestEvent) {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file, exiting")
+		log.Fatal("Error loading .env file", err)
 		os.Exit(1)
 	}
 
-	userID, err := strconv.Atoi(event.UserID) 
+	userID, err := strconv.Atoi(event.UserID)
 	if err != nil {
 		log.Fatal("Invalid userID, exiting")
 	}
@@ -312,9 +310,8 @@ func start(event ScanRequestEvent) {
 func main() {
 	isLocal = os.Getenv("LAMBDA_TASK_ROOT") == ""
 	if isLocal {
-		start(ScanRequestEvent{UserID: "2"})
+		start(ScanRequestEvent{UserID: "1"})
 	} else {
 		lambda.Start(start)
 	}
 }
-

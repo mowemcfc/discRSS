@@ -201,7 +201,7 @@ func userGetHandler(c *gin.Context) {
 
 	user, err := fetchUser(requestUserID)
 	if err != nil {
-		log.Println(err)
+		log.Println("error fetching user from DDB", err)
 		return
 	}
 
@@ -211,7 +211,7 @@ func userGetHandler(c *gin.Context) {
 	marshalledUser, err := json.Marshal(user)
 	log.Printf("\nmarshalled: %s\n", string(marshalledUser))
 	if err != nil {
-		log.Println(err)
+		log.Println("error marshalling user to JSON object", err)
 		return
 	}
 
@@ -239,25 +239,18 @@ func userPostHandler(c *gin.Context) {
 		return
 	}
 
-	//user, err := fetchUser(createUserParams.UserID) // TODO: replace with request body userId
-	//if err != nil {
-	//	log.Println(err)
-	//	return
-	//}
-
 	log.Println(createUserParams.UserID)
-	//log.Printf("%v", user)
 
 	marshalledUser, err := json.Marshal(createUserParams)
 	log.Printf("\nmarshalled: %s\n", string(marshalledUser))
 	if err != nil {
-		log.Println(err)
+		log.Println("error marshalling user to JSON object", err)
 		return
 	}
 
 	err = putUser(&createUserParams)
 	if err != nil {
-		log.Println(err)
+		log.Println("error putting using in DDB", err)
 		return
 	}
 
@@ -318,7 +311,7 @@ func main() {
 
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		log.Fatal("Error loading .env file", err)
 		os.Exit(1)
 	}
 
@@ -338,7 +331,7 @@ func main() {
 
 	awsSession, err := getAWSSession()
 	if err != nil {
-		log.Println(err)
+		log.Println("error opening AWS session: ", err)
 		return
 	}
 	ddbSvc = dynamodb.New(awsSession)

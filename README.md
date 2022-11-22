@@ -14,6 +14,34 @@ make deploy
 
 ## TODO
 
+### Priority
+
+- [ ] add feed button
+  - [x] ui component
+  - [x] onSubmit handler
+    - [x] local data
+    - [x] post request to API route
+  - [x] backend handler
+- [ ] remove feed button
+- [ ] simplify timestamp parsing by removing format-specific logic, see time.Parse(layout, str)
+- [ ] remove timestamp from frontend
+- [ ] validated submitted feed are indeed valid RSS
+
+### Backlog 
+
+- [ ] tracing
+- [ ] make as much of lambda async as possible
+- [ ] logging
+  - [x] basic
+  - [ ] structured
+- [ ] consolidate .env files and other assorted local txt's
+- [ ] lambda JWT auth
+  - [x] basic
+  - [ ] allow proper scopes, createUser, getFeed
+  - [ ] prevent IDOR by comparing userID's against JWT `sub`
+
+### Completed
+
 - [x] cdk stack to host app on lambda
   - [x] DDB tables
   - [x] lambda
@@ -41,34 +69,15 @@ make deploy
 - [x] fix autoscan
 - [x] figure out calling scan endpoint internally (probably just separate it into separate lambda)
 - [x] clean up newly-separated go modules
-- [ ] tracing
-- [ ] frontend
-  - [x] login page
-   - [x] make login page redirect to profile if already logged in
-  - [x] auth0 integration
-  - [x] display feeds via ddb fetch
-    - [x] fetch data
-    - [x] ui components
-  - [x] display channels via ddb fetch
-  - [ ] allow putitem new feeds via frontend form  <--
-    - [x] ui component
-    - [x] onSubmit handler
-      - [x] local data
-      - [x] post request to API route
-      - [ ] remove timestamp from model
-  - [ ] putitem new channels via frontend form
+- [x] login page
+  - [x] make login page redirect to profile if already logged in
+- [x] auth0 integration
+- [x] display feeds via ddb fetch
+  - [x] fetch data
+  - [x] ui components
+- [x] display channels via ddb fetch
 - [x] create DNS endpoint for API
   - [x] update frontend refs
 - [x] fix eventbridge call to lambda IOT use /scan endpoint
 - [x] add .env placeholders throughout where used
-- [ ] make as much of lambda async as possible
-- [ ] user POST handler
-- [ ] logging
-  - [x] basic
-  - [ ] structured
-- [ ] simplify timestamp parsing by removing format-specific logic, see time.Parse(layout, str)
-- [ ] consolidate .env files and other assorted local txt's
-- [ ] lambda JWT auth
-  - [x] basic
-  - [ ] allow proper scopes, createUser, getFeed
-  - [ ] compare provided username against jwt sub, throw error if mismatch
+- [x] user POST handler
