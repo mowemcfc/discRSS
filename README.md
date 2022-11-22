@@ -54,7 +54,7 @@ make deploy
     - [x] ui component
     - [x] onSubmit handler
       - [x] local data
-      - [ ] post request to API route
+      - [x] post request to API route
       - [ ] remove timestamp from model
   - [ ] putitem new channels via frontend form
 - [x] create DNS endpoint for API

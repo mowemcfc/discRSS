@@ -24,29 +24,29 @@ import (
 )
 
 type Feed struct {
-	FeedID     int    `json:"feedId"`
-	Title      string `json:"title"`
-	Url        string `json:"url"`
-	TimeFormat string `json:"timeFormat"`
+	FeedID     int    `json:"feedId" dynamodbav:"feedId"`
+	Title      string `json:"title" dynamodbav:"title"`
+	Url        string `json:"url" dynamodbav:"url"`
+	TimeFormat string `json:"timeFormat" dynamodbav:"timeFormat"`
 }
 
 type UserAccount struct {
-	UserID      int              `json:"userId"`
-	Username    string           `json:"username"`
-	FeedList    []Feed           `json:"feedList"`
-	ChannelList []DiscordChannel `json:"channelList"`
+	UserID      int              `json:"userId" dynamodbav:"userId"`
+	Username    string           `json:"username" dynamodbav:"username"`
+	FeedList    []Feed           `json:"feedList" dynamodbav:"feedList"`
+	ChannelList []DiscordChannel `json:"channelList" dynamodbav:"channelList"`
 }
 
 type DiscordChannel struct {
-	ChannelName string `json:"channelName"`
-	ServerName  string `json:"serverName"`
-	ChannelID   int    `json:"channelID"`
+	ChannelName string `json:"channelName" dynamodbav:"channelName"`
+	ServerName  string `json:"serverName" dynamodbav:"serverName"`
+	ChannelID   int    `json:"channelID" dynamodbav:"channelID"`
 }
 
 type AppConfig struct {
-	AppName               string `json:"appName"`
-	LastCheckedTime       string `json:"lastCheckedTime"`
-	LastCheckedTimeFormat string `json:"lastCheckedTimeFormat"`
+	AppName               string `json:"appName" dynamodbav:"appName"`
+	LastCheckedTime       string `json:"lastCheckedTime" dynamodbav:"lastCheckedTime"`
+	LastCheckedTimeFormat string `json:"lastCheckedTimeFormat" dynamodbav:"lastCheckedTimeFormat"`
 }
 
 var discRssConfig *AppConfig
@@ -110,7 +110,7 @@ func fetchUser(userID int) (*UserAccount, error) {
 
 	getUserInput := &dynamodb.GetItemInput{
 		Key: map[string]*dynamodb.AttributeValue{
-			"userID": {
+			"userId": {
 				N: aws.String(strconv.Itoa(userID)),
 			},
 		},
@@ -151,7 +151,7 @@ func fetchUser(userID int) (*UserAccount, error) {
 func putUser(user *UserAccount) error {
 	marshalledUser, err := dynamodbattribute.MarshalMap(user)
 	if err != nil {
-		return fmt.Errorf(err.Error())
+		return fmt.Errorf("error marshalling user into ddb Item: %s", err.Error())
 	}
 
 	input := &dynamodb.PutItemInput{
@@ -197,7 +197,7 @@ func userGetHandler(c *gin.Context) {
 		log.Println(err)
 		return
 	}
-	log.Printf("userID: %d\n", requestUserID)
+	log.Printf("userId: %d\n", requestUserID)
 
 	user, err := fetchUser(requestUserID)
 	if err != nil {
@@ -235,18 +235,18 @@ func userPostHandler(c *gin.Context) {
 	var createUserParams UserAccount
 	err := c.BindJSON(&createUserParams)
 	if err != nil {
-		log.Println(err)
+		log.Printf("error binding user params JSON to UserAccount struct", err)
 		return
 	}
 
-	user, err := fetchUser(createUserParams.UserID) // TODO: replace with request body userId
-	if err != nil {
-		log.Println(err)
-		return
-	}
+	//user, err := fetchUser(createUserParams.UserID) // TODO: replace with request body userId
+	//if err != nil {
+	//	log.Println(err)
+	//	return
+	//}
 
 	log.Println(createUserParams.UserID)
-	log.Printf("%v", user)
+	//log.Printf("%v", user)
 
 	marshalledUser, err := json.Marshal(createUserParams)
 	log.Printf("\nmarshalled: %s\n", string(marshalledUser))
