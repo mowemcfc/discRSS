@@ -65,7 +65,6 @@ const USER_TABLE_NAME string = "discRSS-UserRecords"
 const BOT_TOKEN_SECRET_NAME string = "discRSS/discord-bot-secret"
 
 func fetchAppConfig(appName string) (*AppConfig, error) {
-
 	getAppConfigInput := &dynamodb.GetItemInput{
 		Key: map[string]*dynamodb.AttributeValue{
 			"appName": {
