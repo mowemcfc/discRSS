@@ -24,14 +24,14 @@ import (
 )
 
 type Feed struct {
-	FeedID     int    `json:"feedId" dynamodbav:"feedId"`
-	Title      string `json:"title" dynamodbav:"title"`
-	Url        string `json:"url" dynamodbav:"url"`
-	TimeFormat string `json:"timeFormat" dynamodbav:"timeFormat"`
+	FeedID     json.Number `json:"feedId" dynamodbav:"feedId"`
+	Title      string      `json:"title" dynamodbav:"title"`
+	Url        string      `json:"url" dynamodbav:"url"`
+	TimeFormat string      `json:"timeFormat" dynamodbav:"timeFormat"`
 }
 
 type UserAccount struct {
-	UserID      int              `json:"userId" dynamodbav:"userId"`
+	UserID      json.Number      `json:"userId" dynamodbav:"userId"`
 	Username    string           `json:"username" dynamodbav:"username"`
 	FeedList    []Feed           `json:"feedList" dynamodbav:"feedList"`
 	ChannelList []DiscordChannel `json:"channelList" dynamodbav:"channelList"`
@@ -232,8 +232,7 @@ func addUserHandler(c *gin.Context) {
 	//  - gracefully send error response
 
 	var createUserParams UserAccount
-	err := c.BindJSON(&createUserParams)
-	if err != nil {
+	if err := c.BindJSON(&createUserParams); err != nil {
 		log.Printf("error binding user params JSON to UserAccount struct", err)
 		return
 	}
@@ -260,6 +259,71 @@ func addUserHandler(c *gin.Context) {
 			"Content-Type": "application/json",
 		},
 		Body: string(marshalledUser),
+	})
+}
+
+func addFeedHandler(c *gin.Context) {
+	// TODO:
+	// recv payload, parse userId and
+	// marshall feed json into feed struct
+	// if feedId already exists, error
+	// fetch user profile
+	// append marshalled field to feedList
+	// return 200
+	// return appropriate errors as required
+
+	addFeedParams := struct {
+		UserId  string `json:"userId"`
+		NewFeed []Feed `json:"newFeed"`
+	}{}
+
+	if err := c.BindJSON(&addFeedParams); err != nil {
+		log.Println("error binding addFeed params JSON to addFeedParams struct", err)
+		return
+	}
+
+	marshalledFeed, err := dynamodbattribute.Marshal(addFeedParams.NewFeed)
+	if err != nil {
+		log.Println("error marshalling feed struct into dynamodbattribute map", err)
+		return
+	}
+
+	addFeedInput := &dynamodb.UpdateItemInput{
+		ExpressionAttributeNames: map[string]*string{
+			"#fL": aws.String("feedList"),
+		},
+		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
+			":f": marshalledFeed,
+		},
+		Key: map[string]*dynamodb.AttributeValue{
+			"userId": {
+				N: aws.String(addFeedParams.UserId),
+			},
+		},
+		ReturnValues:     aws.String("UPDATED_NEW"),
+		UpdateExpression: aws.String("SET #fL = list_append(#fL, :f)"),
+		TableName:        aws.String(USER_TABLE_NAME),
+	}
+
+	_, err = ddbSvc.UpdateItem(addFeedInput)
+	if err != nil {
+		log.Printf("error updating user: %s's feed list with feed: %v, %s\n", addFeedParams.UserId, addFeedParams.NewFeed, err.Error())
+		return
+	}
+
+	jsonMarshalledFeed, err := json.Marshal(addFeedParams.NewFeed)
+	if err != nil {
+		log.Printf("error converting addFeedParams.NewFeed to json string", err)
+		return
+	}
+
+	c.JSON(http.StatusOK, events.APIGatewayProxyResponse{
+		StatusCode:      http.StatusOK,
+		IsBase64Encoded: false,
+		Headers: map[string]string{
+			"Content-Type": "application/json",
+		},
+		Body: string(jsonMarshalledFeed),
 	})
 }
 
@@ -329,8 +393,9 @@ func main() {
 		userRoute.POST("", corsMiddleware, jwtMiddleware, addUserHandler)
 		userRoute.OPTIONS("", corsMiddleware, corsPreflightHandler)
 
-		userRoute.GET("/feeds", corsMiddleware, jwtMiddleware)
-		userRoute.POST("/feeds", corsMiddleware, jwtMiddleware)
+		userRoute.GET("/feeds", corsMiddleware, jwtMiddleware /*, removeFeedHandler */)
+		userRoute.POST("/feeds", corsMiddleware, jwtMiddleware, addFeedHandler)
+		userRoute.OPTIONS("/feeds", corsMiddleware, corsPreflightHandler)
 	}
 
 	awsSession, err := getAWSSession()

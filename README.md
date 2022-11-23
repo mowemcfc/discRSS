@@ -17,6 +17,7 @@ make deploy
 ### Priority
 
 - [ ] introduce more granular routes to API handlers e.g. user -> user/feed, user/channel
+- [ ] scope react props at more appropriate levels e.g. add FeedList component and pass in user feeds
 - [ ] add feed button
   - [x] ui component
   - [x] onSubmit handler
