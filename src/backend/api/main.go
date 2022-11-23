@@ -386,16 +386,15 @@ func main() {
 
 	log.Println("Configuring API methods")
 	g.GET("/hello", corsMiddleware, helloWorldHandler)
+	g.OPTIONS("*", corsMiddleware, corsPreflightHandler)
 
 	userRoute := g.Group("/user")
 	{
 		userRoute.GET("", corsMiddleware, jwtMiddleware, getUserHandler)
 		userRoute.POST("", corsMiddleware, jwtMiddleware, addUserHandler)
-		userRoute.OPTIONS("", corsMiddleware, corsPreflightHandler)
 
 		userRoute.GET("/feeds", corsMiddleware, jwtMiddleware /*, removeFeedHandler */)
 		userRoute.POST("/feeds", corsMiddleware, jwtMiddleware, addFeedHandler)
-		userRoute.OPTIONS("/feeds", corsMiddleware, corsPreflightHandler)
 	}
 
 	awsSession, err := getAWSSession()
