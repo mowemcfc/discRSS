@@ -15,7 +15,11 @@ export const FeedList: React.FC<FeedListProps> = ({ userId, feedList }): JSX.Ele
     getAccessTokenSilently,
   } = useAuth0();
 
-  const [ feedListState, setFeedListState ] = useState<Feed[]>(feedList)
+  const [ feedListState, setFeedListState ] = useState<Feed[]>([])
+
+  useEffect(() => {
+    setFeedListState(feedList)
+  })
 
   const submitForm = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -50,7 +54,6 @@ export const FeedList: React.FC<FeedListProps> = ({ userId, feedList }): JSX.Ele
     console.log(JSON.stringify(resp))
     console.log(JSON.stringify(newFeedParams.newFeed))
     if (JSON.stringify(resp) === JSON.stringify(newFeedParams.newFeed)) {
-      console.log("setting")
       setFeedListState(feedListState.concat(newFeedParams.newFeed))
     } else {
       console.error('response did not match request body, indicating something went wrong')
