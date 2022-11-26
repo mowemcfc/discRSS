@@ -9,6 +9,8 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/mowemcfc/discRSS/internal/helpers"
+
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
@@ -66,7 +68,6 @@ const USER_TABLE_NAME string = "discRSS-UserRecords"
 const BOT_TOKEN_SECRET_NAME string = "discRSS/discord-bot-secret"
 
 func fetchUser(userID int) (*UserAccount, error) {
-
 	getUserInput := &dynamodb.GetItemInput{
 		Key: map[string]*dynamodb.AttributeValue{
 			"userId": {
@@ -174,6 +175,7 @@ func getUserHandler(c *gin.Context) {
 		return
 	}
 
+	helpers.Response()
 	c.JSON(http.StatusOK, events.APIGatewayProxyResponse{
 		StatusCode:      http.StatusOK,
 		IsBase64Encoded: false,
