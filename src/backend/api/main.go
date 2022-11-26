@@ -9,7 +9,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/mowemcfc/discRSS/internal/helpers"
+	"github.com/mowemcfc/discRSS/response"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -175,7 +175,7 @@ func getUserHandler(c *gin.Context) {
 		return
 	}
 
-	helpers.Response()
+	response.Response()
 	c.JSON(http.StatusOK, events.APIGatewayProxyResponse{
 		StatusCode:      http.StatusOK,
 		IsBase64Encoded: false,
