@@ -9,7 +9,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/mowemcfc/discRSS/response"
+	"github.com/mowemcfc/discRSS-api/internal/response"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"

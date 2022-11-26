@@ -1,4 +1,4 @@
-module github.com/mowemcfc/discRSS
+module github.com/mowemcfc/discRSS-api
 
 go 1.19
 
