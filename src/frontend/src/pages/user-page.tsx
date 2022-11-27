@@ -52,7 +52,6 @@ export const UserPage: React.FC = () => {
         <SiteBanner />
       </div>
       <div className="flex-1 bg-slate-200 mx-auto px-4 py-32 lg:items-center h-full min-h-screen">
-        <UserProfile />
         <FeedList feedList={userData.feedList} userId={userData.userId}/>
       </div>
     </div>
