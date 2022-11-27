@@ -34,7 +34,7 @@ type ApiGatewayLambdaProxyResponse struct {
 
 func (g *Gin) Response(httpCode int, data interface{}) {
 	g.C.JSON(httpCode, ApiGatewayLambdaProxyResponse{
-		IsBase64Encoded:   true,
+		IsBase64Encoded:   false,
 		StatusCode:        httpCode,
 		Headers:           map[string]string{"Content-Type": "application/json"},
 		MultiValueHeaders: nil,

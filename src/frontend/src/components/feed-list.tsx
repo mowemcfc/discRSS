@@ -19,7 +19,7 @@ export const FeedList: React.FC<FeedListProps> = ({ userId, feedList }): JSX.Ele
 
   useEffect(() => {
     setFeedListState(feedList)
-  })
+  }, [feedList])
 
   const submitForm = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -47,7 +47,7 @@ export const FeedList: React.FC<FeedListProps> = ({ userId, feedList }): JSX.Ele
     })
       .then(handleErrors)
       .then(res => res.json())
-      .then(data => JSON.parse(data?.["body"]))
+      .then(data => data.Body)
 
     // There seems to be no simpler way to check object equality than using JSON.stringify()
     //  NOTE: this approach requires keys to be ordered the same way, as comparison is done against strings.
@@ -95,7 +95,7 @@ export const FeedList: React.FC<FeedListProps> = ({ userId, feedList }): JSX.Ele
             </thead>
             <tbody className="divide-y divide-gray-200">
               {feedListState.map((feed: Feed) => {
-                return <FeedRow key={`FeedRow-${feed.feedId}`} feed={feed} />
+                return <FeedRow feed={feed} />
               })}
               <NewFeedRow />
             </tbody>

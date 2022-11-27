@@ -152,7 +152,9 @@ func putUser(user *UserAccount) error {
 }
 
 func getUserHandler(c *gin.Context) {
-	requestUserID, err := strconv.Atoi(c.Request.URL.Query().Get("userId"))
+	appG := response.Gin{C: c}
+
+	requestUserID, err := strconv.Atoi(appG.C.Request.URL.Query().Get("userId"))
 	if err != nil {
 		log.Println(err)
 		return
@@ -168,59 +170,31 @@ func getUserHandler(c *gin.Context) {
 	log.Printf("user %d channels: %+v", user.UserID, user.ChannelList)
 	log.Printf("user %d feeds: %+v", user.UserID, user.FeedList)
 
-	marshalledUser, err := json.Marshal(user)
-	log.Printf("\nmarshalled: %s\n", string(marshalledUser))
-	if err != nil {
-		log.Println("error marshalling user to JSON object", err)
-		return
-	}
-
-	response.Response()
-	c.JSON(http.StatusOK, events.APIGatewayProxyResponse{
-		StatusCode:      http.StatusOK,
-		IsBase64Encoded: false,
-		Headers: map[string]string{
-			"Content-Type": "application/json",
-		},
-		Body: string(marshalledUser),
-	})
+	appG.Response(http.StatusOK, user)
 }
 
 func addUserHandler(c *gin.Context) {
+	appG := response.Gin{C: c}
 
 	// TODO: Error handling
 	//	- IDOR
 	//  - gracefully send error response
 
 	var createUserParams UserAccount
-	if err := c.BindJSON(&createUserParams); err != nil {
+	if err := appG.C.BindJSON(&createUserParams); err != nil {
 		log.Printf("error binding user params JSON to UserAccount struct", err)
 		return
 	}
 
 	log.Println(createUserParams.UserID)
 
-	marshalledUser, err := json.Marshal(createUserParams)
-	log.Printf("\nmarshalled: %s\n", string(marshalledUser))
-	if err != nil {
-		log.Println("error marshalling user to JSON object", err)
-		return
-	}
-
-	err = putUser(&createUserParams)
+	err := putUser(&createUserParams)
 	if err != nil {
 		log.Println("error putting using in DDB", err)
 		return
 	}
 
-	c.JSON(http.StatusOK, events.APIGatewayProxyResponse{
-		StatusCode:      http.StatusOK,
-		IsBase64Encoded: false,
-		Headers: map[string]string{
-			"Content-Type": "application/json",
-		},
-		Body: string(marshalledUser),
-	})
+	appG.Response(http.StatusOK, createUserParams)
 }
 
 func addFeedHandler(c *gin.Context) {
@@ -232,13 +206,14 @@ func addFeedHandler(c *gin.Context) {
 	// append marshalled field to feedList
 	// return 200
 	// return appropriate errors as required
+	appG := response.Gin{C: c}
 
 	addFeedParams := struct {
 		UserId  string `json:"userId"`
 		NewFeed []Feed `json:"newFeed"`
 	}{}
 
-	if err := c.BindJSON(&addFeedParams); err != nil {
+	if err := appG.C.BindJSON(&addFeedParams); err != nil {
 		log.Println("error binding addFeed params JSON to addFeedParams struct", err)
 		return
 	}
@@ -272,42 +247,17 @@ func addFeedHandler(c *gin.Context) {
 		return
 	}
 
-	jsonMarshalledFeed, err := json.Marshal(addFeedParams.NewFeed)
-	if err != nil {
-		log.Printf("error converting addFeedParams.NewFeed to json string", err)
-		return
-	}
-
-	c.JSON(http.StatusOK, events.APIGatewayProxyResponse{
-		StatusCode:      http.StatusOK,
-		IsBase64Encoded: false,
-		Headers: map[string]string{
-			"Content-Type": "application/json",
-		},
-		Body: string(jsonMarshalledFeed),
-	})
+	appG.Response(http.StatusOK, addFeedParams.NewFeed)
 }
 
 func helloWorldHandler(c *gin.Context) {
-	c.JSON(http.StatusOK, events.APIGatewayProxyResponse{
-		StatusCode:      http.StatusOK,
-		IsBase64Encoded: false,
-		Headers: map[string]string{
-			"Content-Type": "application/json",
-		},
-		Body: "Hello, World!",
-	})
+	appG := response.Gin{C: c}
+	appG.Response(http.StatusOK, "Hello, World!")
 }
 
 func notFoundHandler(c *gin.Context) {
-	c.JSON(http.StatusNotFound, events.APIGatewayProxyResponse{
-		StatusCode:      http.StatusNotFound,
-		IsBase64Encoded: false,
-		Headers: map[string]string{
-			"Content-Type": "application/json",
-		},
-		Body: fmt.Sprintf("Not Found: %s", c.Request.URL.Path),
-	})
+	appG := response.Gin{C: c}
+	appG.Response(http.StatusNotFound, "Resource not found.")
 }
 
 func main() {

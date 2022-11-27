@@ -25,7 +25,8 @@ export const UserPage: React.FC = () => {
       })
         .then(handleErrors)
         .then(res => res.json())
-        .then(data => JSON.parse(data["body"]))
+        .then(data => data.Body)
+      
 
       setUser(resp)
     }
@@ -47,10 +48,10 @@ export const UserPage: React.FC = () => {
 
   return (
     <div>
-      <div className="flex justify-center px-2 py-3 bg-blue-300"> 
+      <div className="flex-initial justify-center px-2 py-3 bg-blue-300"> 
         <SiteBanner />
       </div>
-      <div className="bg-slate-200 mx-auto px-4 py-32 lg:items-center h-screen">
+      <div className="flex-1 bg-slate-200 mx-auto px-4 py-32 lg:items-center h-screen">
         <UserProfile />
         <FeedList feedList={userData.feedList} userId={userData.userId}/>
       </div>
