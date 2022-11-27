@@ -51,7 +51,7 @@ export const UserPage: React.FC = () => {
       <div className="flex-initial justify-center px-2 py-3 bg-blue-300"> 
         <SiteBanner />
       </div>
-      <div className="flex-1 bg-slate-200 mx-auto px-4 py-32 lg:items-center h-screen">
+      <div className="flex-1 bg-slate-200 mx-auto px-4 py-32 lg:items-center h-full min-h-screen">
         <UserProfile />
         <FeedList feedList={userData.feedList} userId={userData.userId}/>
       </div>
