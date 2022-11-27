@@ -16,14 +16,13 @@ make deploy
 
 ### Priority
 
-- [ ] introduce more granular routes to API handlers e.g. user -> user/feed, user/channel
-- [ ] scope react props at more appropriate levels e.g. add FeedList component and pass in user feeds
 - [ ] add feed button
   - [x] ui component
   - [x] onSubmit handler
     - [x] local data
     - [x] post request to API route
   - [x] backend handler
+  - [ ] error checks/responses from handler
 - [ ] remove feed button
   - [ ] ui component
   - [ ] onsubmit handler
@@ -32,6 +31,7 @@ make deploy
   - [ ] backend handler
 - [ ] simplify timestamp parsing by removing format-specific logic, see time.Parse(layout, str)
 - [ ] remove timestamp from frontend
+- [ ] fix deploy to accomodate new folder structure
 
 ### Backlog 
 
@@ -88,3 +88,5 @@ make deploy
 - [x] fix eventbridge call to lambda IOT use /scan endpoint
 - [x] add .env placeholders throughout where used
 - [x] user POST handler
+- [x] introduce more granular routes to API handlers e.g. user -> user/feed, user/channel
+- [x] scope react props at more appropriate levels e.g. add FeedList component and pass in user feeds
