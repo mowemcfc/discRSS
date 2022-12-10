@@ -26,7 +26,7 @@ export class DiscRssStack extends Stack {
       functionName: 'discRSS-scanLambda',
       architecture: lambda.Architecture.X86_64,
       runtime: lambda.Runtime.GO_1_X,
-      code: lambda.Code.fromAsset(path.join(__dirname, '../../src/backend/scanner/main.zip')),
+      code: lambda.Code.fromAsset(path.join(__dirname, '../../backend/scanner.zip')),
       handler: 'main',
       timeout: Duration.seconds(60)
     })
@@ -46,7 +46,7 @@ export class DiscRssStack extends Stack {
       functionName: 'discRSS-apiLambda',
       architecture: lambda.Architecture.X86_64,
       runtime: lambda.Runtime.GO_1_X,
-      code: lambda.Code.fromAsset(path.join(__dirname, '../../src/backend/api/main.zip')),
+      code: lambda.Code.fromAsset(path.join(__dirname, '../../backend/api.zip')),
       handler: 'main',
       timeout: Duration.seconds(60)
     })
