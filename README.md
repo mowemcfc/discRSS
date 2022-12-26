@@ -24,12 +24,11 @@ make deploy
   - [x] backend handler
   - [ ] error checks/responses from handler
 - [ ] remove feed button
-  - [ ] ui component
+  - [x] ui component
   - [ ] onsubmit handler
     - [ ] post request to API route
     - [ ] set local state
   - [ ] backend handler
-- [ ] simplify timestamp parsing by removing format-specific logic, see time.Parse(layout, str)
 - [ ] remove timestamp from frontend
 - [ ] fix deploy to accomodate new folder structure
 
@@ -90,3 +89,4 @@ make deploy
 - [x] user POST handler
 - [x] introduce more granular routes to API handlers e.g. user -> user/feed, user/channel
 - [x] scope react props at more appropriate levels e.g. add FeedList component and pass in user feeds
+- [x] simplify timestamp parsing by removing format-specific logic, see time.Parse(layout, str)
