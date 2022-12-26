@@ -5,6 +5,11 @@ export type Feed = {
   timeFormat: string
 }
 
+export type NewFeedParams = {
+  title: string
+  url: string
+}
+
 export type DiscordChannel = {
   channelName: string
   serverName: string

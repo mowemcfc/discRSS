@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -28,14 +29,14 @@ type ScanRequestEvent struct {
 }
 
 type Feed struct {
-	FeedID     int    `json:"feedID"`
-	Title      string `json:"title"`
-	Url        string `json:"url"`
-	TimeFormat string `json:"timeFormat"`
+	FeedID     json.Number `json:"feedID"`
+	Title      string      `json:"title"`
+	Url        string      `json:"url"`
+	TimeFormat string      `json:"timeFormat"`
 }
 
 type UserAccount struct {
-	UserID      int              `json:"userID"`
+	UserID      json.Number      `json:"userID"`
 	Username    string           `json:"username"`
 	FeedList    []Feed           `json:"feedList"`
 	ChannelList []DiscordChannel `json:"channelList"`

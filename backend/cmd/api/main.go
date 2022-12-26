@@ -29,14 +29,14 @@ import (
 )
 
 type Feed struct {
-	FeedID     json.Number `json:"feedId" dynamodbav:"feedId"`
+	FeedID     json.Number `json:"feedId" dynamodbav:"feedId" type:"integer"`
 	Title      string      `json:"title" dynamodbav:"title"`
 	Url        string      `json:"url" dynamodbav:"url"`
 	TimeFormat string      `json:"timeFormat" dynamodbav:"timeFormat"`
 }
 
 type UserAccount struct {
-	UserID      json.Number      `json:"userId" dynamodbav:"userId"`
+	UserID      json.Number      `json:"userId" dynamodbav:"userId" type:"integer"`
 	Username    string           `json:"username" dynamodbav:"username"`
 	FeedList    []Feed           `json:"feedList" dynamodbav:"feedList"`
 	ChannelList []DiscordChannel `json:"channelList" dynamodbav:"channelList"`
@@ -199,6 +199,11 @@ func addUserHandler(c *gin.Context) {
 	appG.Response(http.StatusOK, createUserParams)
 }
 
+type AddFeedParams struct {
+	Title string
+	URL   string
+}
+
 func addFeedHandler(c *gin.Context) {
 	// TODO:
 	// recv payload, parse userId and
@@ -211,8 +216,8 @@ func addFeedHandler(c *gin.Context) {
 	appG := response.Gin{C: c}
 
 	addFeedParams := struct {
-		UserId  string `json:"userId"`
-		NewFeed []Feed `json:"newFeed"`
+		UserId  string        `json:"userId"`
+		NewFeed AddFeedParams `json:"newFeed"`
 	}{}
 
 	if err := appG.C.BindJSON(&addFeedParams); err != nil {
@@ -220,7 +225,27 @@ func addFeedHandler(c *gin.Context) {
 		return
 	}
 
-	marshalledFeed, err := dynamodbattribute.Marshal(addFeedParams.NewFeed)
+	requestUserID, err := strconv.Atoi(addFeedParams.UserId)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	log.Printf("userId: %d\n", requestUserID)
+
+	user, err := fetchUser(requestUserID)
+	if err != nil {
+		log.Println("error fetching user from DDB", err)
+		return
+	}
+
+	userFeedListLength := len(user.FeedList)
+
+	marshalledFeed, err := dynamodbattribute.Marshal([]Feed{{
+		FeedID:     json.Number(userFeedListLength),
+		Title:      addFeedParams.NewFeed.Title,
+		Url:        addFeedParams.NewFeed.URL,
+		TimeFormat: "z",
+	}})
 	if err != nil {
 		log.Println("error marshalling feed struct into dynamodbattribute map", err)
 		return
@@ -243,11 +268,12 @@ func addFeedHandler(c *gin.Context) {
 		TableName:        aws.String(USER_TABLE_NAME),
 	}
 
-	_, err = ddbSvc.UpdateItem(addFeedInput)
+	updatedValues, err := ddbSvc.UpdateItem(addFeedInput)
 	if err != nil {
-		log.Printf("error updating user: %s's feed list with feed: %v, %s\n", addFeedParams.UserId, addFeedParams.NewFeed, err.Error())
+		log.Printf("error updating user: %s's feed list with feed: %v, %s\n", addFeedParams.UserId, marshalledFeed, err.Error())
 		return
 	}
+	log.Printf("%v", updatedValues.Attributes)
 
 	appG.Response(http.StatusOK, addFeedParams.NewFeed)
 }

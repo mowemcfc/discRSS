@@ -124,8 +124,8 @@ export class DiscRssStack extends Stack {
     appConfigTable.grantReadWriteData(apiLambda.role!.grantPrincipal)
 
     // Use for debugging, if you want to test your feed update over a longer period
-    //const currentTime = "2022-08-02T15:04:05Z"
-    const currentTime = new Date().toISOString()
+    const currentTime = "2022-10-20T15:04:05Z"
+    //const currentTime = new Date().toISOString()
     const appConfigTableInitAction: cr.AwsSdkCall = {
       service: 'DynamoDB',
       action: 'putItem',
