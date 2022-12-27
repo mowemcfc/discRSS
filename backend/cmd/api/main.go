@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -29,17 +28,17 @@ import (
 )
 
 type Feed struct {
-	FeedID     json.Number `json:"feedId" dynamodbav:"feedId" type:"integer"`
-	Title      string      `json:"title" dynamodbav:"title"`
-	Url        string      `json:"url" dynamodbav:"url"`
-	TimeFormat string      `json:"timeFormat" dynamodbav:"timeFormat"`
+	FeedID     string `json:"feedId" dynamodbav:"feedId"`
+	Title      string `json:"title" dynamodbav:"title"`
+	Url        string `json:"url" dynamodbav:"url"`
+	TimeFormat string `json:"timeFormat" dynamodbav:"timeFormat"`
 }
 
 type UserAccount struct {
-	UserID      json.Number      `json:"userId" dynamodbav:"userId" type:"integer"`
-	Username    string           `json:"username" dynamodbav:"username"`
-	FeedList    []Feed           `json:"feedList" dynamodbav:"feedList"`
-	ChannelList []DiscordChannel `json:"channelList" dynamodbav:"channelList"`
+	UserID      string                     `json:"userId" dynamodbav:"userId"`
+	Username    string                     `json:"username" dynamodbav:"username"`
+	FeedList    map[string]*Feed           `json:"feedList" dynamodbav:"feedList"`
+	ChannelList map[string]*DiscordChannel `json:"channelList" dynamodbav:"channelList"`
 }
 
 type DiscordChannel struct {
@@ -237,23 +236,28 @@ func addFeedHandler(c *gin.Context) {
 		log.Println("error fetching user from DDB", err)
 		return
 	}
+	userFeedListLength := strconv.Itoa(len(user.FeedList))
 
-	userFeedListLength := len(user.FeedList)
-
-	marshalledFeed, err := dynamodbattribute.Marshal([]Feed{{
-		FeedID:     json.Number(userFeedListLength),
+	newFeed := Feed{
+		FeedID:     userFeedListLength,
 		Title:      addFeedParams.NewFeed.Title,
 		Url:        addFeedParams.NewFeed.URL,
 		TimeFormat: "z",
-	}})
+	}
+
+	marshalledFeed, err := dynamodbattribute.Marshal(newFeed)
 	if err != nil {
 		log.Println("error marshalling feed struct into dynamodbattribute map", err)
 		return
 	}
+	//UpdateExpression = "SET map.#number = :string"
+	//ExpressionAttributeNames = { "#number" : "1" }
+	//ExpressionAttributeValues = { ":string" : "the string to store in the map at key value 1" }
+	//ConditionExpression = "attribute_not_exists(map.#number)"
 
 	addFeedInput := &dynamodb.UpdateItemInput{
 		ExpressionAttributeNames: map[string]*string{
-			"#fL": aws.String("feedList"),
+			"#fID": aws.String(userFeedListLength),
 		},
 		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
 			":f": marshalledFeed,
@@ -263,9 +267,10 @@ func addFeedHandler(c *gin.Context) {
 				N: aws.String(addFeedParams.UserId),
 			},
 		},
-		ReturnValues:     aws.String("UPDATED_NEW"),
-		UpdateExpression: aws.String("SET #fL = list_append(#fL, :f)"),
-		TableName:        aws.String(USER_TABLE_NAME),
+		ConditionExpression: aws.String("attribute_not_exists(feedList.#fID)"),
+		ReturnValues:        aws.String("UPDATED_NEW"),
+		UpdateExpression:    aws.String("SET feedList.#fID = :f"),
+		TableName:           aws.String(USER_TABLE_NAME),
 	}
 
 	updatedValues, err := ddbSvc.UpdateItem(addFeedInput)
@@ -275,7 +280,7 @@ func addFeedHandler(c *gin.Context) {
 	}
 	log.Printf("%v", updatedValues.Attributes)
 
-	appG.Response(http.StatusOK, addFeedParams.NewFeed)
+	appG.Response(http.StatusOK, newFeed)
 }
 
 func helloWorldHandler(c *gin.Context) {

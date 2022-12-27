@@ -31,6 +31,7 @@ make deploy
   - [ ] backend handler
 - [ ] remove timestamp from frontend
 - [ ] fix deploy to accomodate new folder structure
+- [ ] change User.FeedList from DDB array to Map
 
 ### Backlog 
 

@@ -37,11 +37,7 @@ export const NewFeedRow = ({addNewFeedStateHandler}: NewFeedRowProps) => {
   const [ newFeedUrl, setNewFeedUrl ] = useState<string>('')
   const [ newFeedTitle, setNewFeedTitle ] = useState<string>('')
 
-  useEffect(() => {
-    console.log(`new title: ${newFeedTitle}`)
-    console.log(`new url: ${newFeedUrl}`)
-    
-  }, [newFeedTitle, newFeedUrl])
+  useEffect(() => {}, [newFeedTitle, newFeedUrl])
 
   const newFeedTitleChangeHandler = (event:React.ChangeEvent<HTMLInputElement>) => {
     setNewFeedTitle(event.target.value)

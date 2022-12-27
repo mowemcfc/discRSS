@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { UserProfile } from "../components/profile";
 import { useAuth0 } from "@auth0/auth0-react";
+import { Feed, DiscordChannel } from "../types/user";
 import { Navigate } from "react-router-dom";
 import { FeedList } from "../components/feed-list";
 import { SiteBanner } from '../components/site-banner'
@@ -13,7 +13,7 @@ export const UserPage: React.FC = () => {
     getAccessTokenSilently,
   } = useAuth0();
 
-  const [userData, setUser] = useState<UserAccount>({ userId: -1, username: '', feedList: [], channelList: [] })
+  const [userData, setUser] = useState<UserAccount>({ userId: -1, username: '', feedList: {}, channelList: {} })
 
   useEffect(() => {
     const fetchUser = async (id: number) => {
@@ -27,7 +27,6 @@ export const UserPage: React.FC = () => {
         .then(res => res.json())
         .then(data => data.Body)
       
-
       setUser(resp)
     }
 
@@ -52,7 +51,7 @@ export const UserPage: React.FC = () => {
         <SiteBanner />
       </div>
       <div className="bg-slate-200 px-4 py-32 h-full min-h-screen">
-        <FeedList feedList={userData.feedList} userId={userData.userId}/>
+        <FeedList feedList={Object.values(userData.feedList)} userId={userData.userId}/>
       </div>
     </div>
   )

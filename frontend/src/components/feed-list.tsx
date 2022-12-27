@@ -33,8 +33,6 @@ export const FeedList: React.FC<FeedListProps> = ({ userId, feedList }): JSX.Ele
       newFeed: newFeed
     }
 
-    console.log(`Submitted form: \n name: ${newFeed.title}\n url: ${newFeed.url}\n`)
-
     const accessToken = await getAccessTokenSilently()
     const resp = await fetch(
       `${process.env.REACT_APP_APIGW_ENDPOINT!}user/feeds`, {
@@ -48,15 +46,12 @@ export const FeedList: React.FC<FeedListProps> = ({ userId, feedList }): JSX.Ele
       .then(res => res.json())
       .then(data => data.Body)
 
-    console.log(resp[0] as Feed)
     setFeedListState([...feedListState, (resp as Feed)])
   }
 
   const removeFeedHandler = async (feedId: number) => {
     setFeedListState(
       feedListState.filter(el => el.feedId != feedId)
-
-      
     )
   }
 

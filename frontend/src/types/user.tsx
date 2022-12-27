@@ -19,8 +19,8 @@ export type DiscordChannel = {
 export type UserAccount = {
   userId: number
   username: string
-  feedList: Feed[]
-  channelList: DiscordChannel[]
+  feedList: { [id:string]: Feed }
+  channelList: { [id:string]: DiscordChannel }
 }
 
 export default UserAccount
