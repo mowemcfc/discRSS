@@ -18,7 +18,7 @@ export const UserPage: React.FC = () => {
   useEffect(() => {
     const fetchUser = async (id: number) => {
       const accessToken = await getAccessTokenSilently()
-      const resp = await fetch(`${process.env.REACT_APP_APIGW_ENDPOINT!}user?userId=${id}`, {
+      const resp = await fetch(`${process.env.REACT_APP_APIGW_ENDPOINT!}user/${id}`, {
         headers: {
           authorization: `Bearer ${accessToken}`
         },

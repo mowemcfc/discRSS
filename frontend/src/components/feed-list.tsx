@@ -23,19 +23,14 @@ export const FeedList: React.FC<FeedListProps> = ({ userId, feedList }): JSX.Ele
   }, [feedList])
 
   const addNewFeedHandler = async (newFeedTitle: string, newFeedUrl: string) => {
-    const newFeed: NewFeedParams = {
+    const newFeedParams: NewFeedParams = {
         title: newFeedTitle,
         url: newFeedUrl,
     }
 
-    const newFeedParams = {
-      userId: userId.toString(),
-      newFeed: newFeed
-    }
-
     const accessToken = await getAccessTokenSilently()
     const resp = await fetch(
-      `${process.env.REACT_APP_APIGW_ENDPOINT!}user/feeds`, {
+      `${process.env.REACT_APP_APIGW_ENDPOINT!}user/${userId.toString()}/feed`, {
       method: 'POST',
       body: JSON.stringify(newFeedParams),
       headers: {

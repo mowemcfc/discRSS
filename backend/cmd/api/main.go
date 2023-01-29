@@ -155,7 +155,7 @@ func putUser(user *UserAccount) error {
 func getUserHandler(c *gin.Context) {
 	appG := response.Gin{C: c}
 
-	requestUserID, err := strconv.Atoi(appG.C.Request.URL.Query().Get("userId"))
+	requestUserID, err := strconv.Atoi(appG.C.Param("userId"))
 	if err != nil {
 		log.Println(err)
 		return
@@ -204,27 +204,16 @@ type AddFeedParams struct {
 }
 
 func addFeedHandler(c *gin.Context) {
-	// TODO:
-	// recv payload, parse userId and
-	// marshall feed json into feed struct
-	// if feedId already exists, error
-	// fetch user profile
-	// append marshalled field to feedList
-	// return 200
-	// return appropriate errors as required
 	appG := response.Gin{C: c}
 
-	addFeedParams := struct {
-		UserId  string        `json:"userId"`
-		NewFeed AddFeedParams `json:"newFeed"`
-	}{}
+	addFeedParams := AddFeedParams{}
 
 	if err := appG.C.BindJSON(&addFeedParams); err != nil {
 		log.Println("error binding addFeed params JSON to addFeedParams struct", err)
 		return
 	}
 
-	requestUserID, err := strconv.Atoi(addFeedParams.UserId)
+	requestUserID, err := strconv.Atoi(appG.C.Param("userId"))
 	if err != nil {
 		log.Println(err)
 		return
@@ -240,8 +229,8 @@ func addFeedHandler(c *gin.Context) {
 
 	newFeed := Feed{
 		FeedID:     userFeedListLength,
-		Title:      addFeedParams.NewFeed.Title,
-		Url:        addFeedParams.NewFeed.URL,
+		Title:      addFeedParams.Title,
+		Url:        addFeedParams.URL,
 		TimeFormat: "z",
 	}
 
@@ -250,10 +239,6 @@ func addFeedHandler(c *gin.Context) {
 		log.Println("error marshalling feed struct into dynamodbattribute map", err)
 		return
 	}
-	//UpdateExpression = "SET map.#number = :string"
-	//ExpressionAttributeNames = { "#number" : "1" }
-	//ExpressionAttributeValues = { ":string" : "the string to store in the map at key value 1" }
-	//ConditionExpression = "attribute_not_exists(map.#number)"
 
 	addFeedInput := &dynamodb.UpdateItemInput{
 		ExpressionAttributeNames: map[string]*string{
@@ -264,7 +249,7 @@ func addFeedHandler(c *gin.Context) {
 		},
 		Key: map[string]*dynamodb.AttributeValue{
 			"userId": {
-				N: aws.String(addFeedParams.UserId),
+				N: aws.String(strconv.Itoa(requestUserID)),
 			},
 		},
 		ConditionExpression: aws.String("attribute_not_exists(feedList.#fID)"),
@@ -275,12 +260,27 @@ func addFeedHandler(c *gin.Context) {
 
 	updatedValues, err := ddbSvc.UpdateItem(addFeedInput)
 	if err != nil {
-		log.Printf("error updating user: %s's feed list with feed: %v, %s\n", addFeedParams.UserId, marshalledFeed, err.Error())
+		log.Printf("error updating user: %d's feed list with feed: %v, %s\n", requestUserID, marshalledFeed, err.Error())
 		return
 	}
 	log.Printf("%v", updatedValues.Attributes)
 
 	appG.Response(http.StatusOK, newFeed)
+}
+
+func getFeedHandler(c *gin.Context) {
+	appG := response.Gin{C: c}
+	appG.Response(http.StatusNotImplemented, "Method GET for resource /user/:userId/feed not implemented")
+}
+
+func deleteUserHandler(c *gin.Context) {
+	appG := response.Gin{C: c}
+	appG.Response(http.StatusNotImplemented, "Method DELETE for resource /user not implemented")
+}
+
+func deleteFeedHandler(c *gin.Context) {
+	appG := response.Gin{C: c}
+	appG.Response(http.StatusNotImplemented, "Method DELETE for resource /user/:userId/feed not implemented")
 }
 
 func helloWorldHandler(c *gin.Context) {
@@ -296,7 +296,7 @@ func notFoundHandler(c *gin.Context) {
 func main() {
 	isLocal = os.Getenv("LAMBDA_TASK_ROOT") == ""
 
-	err := godotenv.Load()
+	err := godotenv.Load("../../.env")
 	if err != nil {
 		log.Fatal("Error loading .env file", err)
 		os.Exit(1)
@@ -321,11 +321,15 @@ func main() {
 
 	userRoute := g.Group("/user")
 	{
-		userRoute.GET("", jwtMiddleware, getUserHandler)
-		userRoute.POST("", jwtMiddleware, addUserHandler)
+		userRoute.GET("/:userId", jwtMiddleware, getUserHandler)
+		userRoute.POST("/:userId", jwtMiddleware, addUserHandler)
+		userRoute.DELETE("/:userId", jwtMiddleware, deleteUserHandler) // unimplemented
 
-		userRoute.GET("/feeds", jwtMiddleware /*, removeFeedHandler */)
-		userRoute.POST("/feeds", jwtMiddleware, addFeedHandler)
+		userRoute.POST("/:userId/feeds", jwtMiddleware)
+
+		userRoute.GET("/:userId/feed/:feedId", jwtMiddleware, getFeedHandler)
+		userRoute.POST("/:userId/feed", jwtMiddleware, addFeedHandler)
+		userRoute.DELETE("/:userId/feed/:feedId", jwtMiddleware, deleteFeedHandler) // unimplemented
 	}
 
 	awsSession, err := sessions.GetAWSSession(isLocal)
