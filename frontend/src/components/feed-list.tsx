@@ -45,8 +45,19 @@ export const FeedList: React.FC<FeedListProps> = ({ userId, feedList }): JSX.Ele
   }
 
   const removeFeedHandler = async (feedId: number) => {
+
+    const accessToken = await getAccessTokenSilently()
+    const resp = await fetch(
+      `${process.env.REACT_APP_APIGW_ENDPOINT!}user/${userId.toString()}/feed/${feedId.toString()}`, {
+      method: 'DELETE',
+      headers: {
+        authorization: `Bearer ${accessToken}`
+      },
+    })
+      .then(handleErrors)
+
     setFeedListState(
-      feedListState.filter(el => el.feedId != feedId)
+      feedListState.filter(feed => feed.feedId != feedId)
     )
   }
 

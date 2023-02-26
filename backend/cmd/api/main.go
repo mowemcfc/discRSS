@@ -19,6 +19,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
+	"github.com/aws/aws-sdk-go/service/dynamodb/expression"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	ginLambdaAdapter "github.com/awslabs/aws-lambda-go-api-proxy/gin"
 	"github.com/gin-contrib/cors"
@@ -280,7 +281,40 @@ func deleteUserHandler(c *gin.Context) {
 
 func deleteFeedHandler(c *gin.Context) {
 	appG := response.Gin{C: c}
-	appG.Response(http.StatusNotImplemented, "Method DELETE for resource /user/:userId/feed not implemented")
+
+	requestUserId := appG.C.Param("userId")
+	requestFeedId := appG.C.Param("feedId")
+
+	update := expression.Remove(expression.Name(fmt.Sprintf("feedList.%s", requestFeedId)))
+	condition := expression.AttributeExists(expression.Name(fmt.Sprintf("feedList.%s", requestFeedId)))
+
+	expr, err := expression.NewBuilder().WithUpdate(update).WithCondition(condition).Build()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Define input for UpdateItem operation
+	input := &dynamodb.UpdateItemInput{
+		Key: map[string]*dynamodb.AttributeValue{
+			"userId": {
+				N: aws.String(requestUserId),
+			},
+		},
+		UpdateExpression:          expr.Update(),
+		ConditionExpression:       expr.Condition(),
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		TableName:                 aws.String(USER_TABLE_NAME),
+	}
+
+	_, err = ddbSvc.UpdateItem(input)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	appG.Response(http.StatusNoContent, interface{}(nil))
 }
 
 func helloWorldHandler(c *gin.Context) {
@@ -296,7 +330,7 @@ func notFoundHandler(c *gin.Context) {
 func main() {
 	isLocal = os.Getenv("LAMBDA_TASK_ROOT") == ""
 
-	err := godotenv.Load("../../.env")
+	err := godotenv.Load(".env")
 	if err != nil {
 		log.Fatal("Error loading .env file", err)
 		os.Exit(1)
@@ -313,7 +347,7 @@ func main() {
 	log.Println("Configuring API methods")
 	g.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:3000"},
-		AllowMethods:     []string{"POST", "PATCH", "PUT", "GET", "OPTIONS"},
+		AllowMethods:     []string{"POST", "PATCH", "PUT", "DELETE", "GET", "OPTIONS"},
 		AllowHeaders:     []string{"*", "Authorization"},
 		AllowCredentials: true,
 	}))
@@ -329,7 +363,7 @@ func main() {
 
 		userRoute.GET("/:userId/feed/:feedId", jwtMiddleware, getFeedHandler)
 		userRoute.POST("/:userId/feed", jwtMiddleware, addFeedHandler)
-		userRoute.DELETE("/:userId/feed/:feedId", jwtMiddleware, deleteFeedHandler) // unimplemented
+		userRoute.DELETE("/:userId/feed/:feedId", jwtMiddleware, deleteFeedHandler)
 	}
 
 	awsSession, err := sessions.GetAWSSession(isLocal)
