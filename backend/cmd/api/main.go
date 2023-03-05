@@ -169,8 +169,8 @@ func getUserHandler(c *gin.Context) {
 		return
 	}
 
-	log.Printf("user %d channels: %+v", user.UserID, user.ChannelList)
-	log.Printf("user %d feeds: %+v", user.UserID, user.FeedList)
+	log.Printf("user %s channels: %+v", user.UserID, user.ChannelList)
+	log.Printf("user %s feeds: %+v", user.UserID, user.FeedList)
 
 	appG.Response(http.StatusOK, user)
 }
@@ -184,7 +184,7 @@ func addUserHandler(c *gin.Context) {
 
 	var createUserParams UserAccount
 	if err := appG.C.BindJSON(&createUserParams); err != nil {
-		log.Printf("error binding user params JSON to UserAccount struct", err)
+		log.Println("error binding user params JSON to UserAccount struct", err)
 		return
 	}
 
