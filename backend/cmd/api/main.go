@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/mowemcfc/discRSS/internal/auth0"
 	"github.com/mowemcfc/discRSS/internal/response"
@@ -19,12 +20,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
-	"github.com/aws/aws-sdk-go/service/dynamodb/expression"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	ginLambdaAdapter "github.com/awslabs/aws-lambda-go-api-proxy/gin"
+
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	adapter "github.com/gwatts/gin-adapter"
+
 	"github.com/joho/godotenv"
 )
 
@@ -229,7 +231,7 @@ func addFeedHandler(c *gin.Context) {
 	userFeedListLength := strconv.Itoa(len(user.FeedList))
 
 	newFeed := Feed{
-		FeedID:     userFeedListLength,
+		FeedID:     strconv.FormatInt(time.Now().UnixNano()/(1<<22), 10),
 		Title:      addFeedParams.Title,
 		Url:        addFeedParams.URL,
 		TimeFormat: "z",
@@ -285,31 +287,39 @@ func deleteFeedHandler(c *gin.Context) {
 	requestUserId := appG.C.Param("userId")
 	requestFeedId := appG.C.Param("feedId")
 
-	update := expression.Remove(expression.Name(fmt.Sprintf("feedList.%s", requestFeedId)))
-	condition := expression.AttributeExists(expression.Name(fmt.Sprintf("feedList.%s", requestFeedId)))
+	//update := expression.Remove(expression.Name(fmt.Sprintf("feedList.%s", requestFeedId)))
+	//condition := expression.AttributeExists(expression.Name(fmt.Sprintf("feedList.%s", requestFeedId)))
 
-	expr, err := expression.NewBuilder().WithUpdate(update).WithCondition(condition).Build()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
+	//expr, err := expression.NewBuilder().WithUpdate(update).WithCondition(condition).Build()
+	//if err != nil {
+	//	c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	//	return
+	//}
 
 	// Define input for UpdateItem operation
+
+	// write a dynamodbInput (like below) that removes the feed from the user's feedList in dynamodb.
+	// feedList is a ddb map
+
 	input := &dynamodb.UpdateItemInput{
+		ExpressionAttributeNames: map[string]*string{
+			"#fID": aws.String(requestFeedId),
+			"#fL":  aws.String("feedList"),
+		},
 		Key: map[string]*dynamodb.AttributeValue{
 			"userId": {
 				N: aws.String(requestUserId),
 			},
 		},
-		UpdateExpression:          expr.Update(),
-		ConditionExpression:       expr.Condition(),
-		ExpressionAttributeNames:  expr.Names(),
-		ExpressionAttributeValues: expr.Values(),
-		TableName:                 aws.String(USER_TABLE_NAME),
+		// todo(mowemcfc): actually figure out how to add a working ConditionExpression
+		//ConditionExpression: aws.String("attribute_exists (#fL)"),
+		UpdateExpression: aws.String("REMOVE #fL.#fID"),
+		TableName:        aws.String(USER_TABLE_NAME),
 	}
 
-	_, err = ddbSvc.UpdateItem(input)
+	_, err := ddbSvc.UpdateItem(input)
 	if err != nil {
+		log.Println("error deleting feed row:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -346,7 +356,7 @@ func main() {
 
 	log.Println("Configuring API methods")
 	g.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:3000"},
+		AllowOrigins:     []string{"http://localhost:9001", "http://localhost:3000"},
 		AllowMethods:     []string{"POST", "PATCH", "PUT", "DELETE", "GET", "OPTIONS"},
 		AllowHeaders:     []string{"*", "Authorization"},
 		AllowCredentials: true,

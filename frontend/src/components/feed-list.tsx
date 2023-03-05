@@ -69,7 +69,7 @@ export const FeedList: React.FC<FeedListProps> = ({ userId, feedList }): JSX.Ele
                 <td
                   className="py-3 text-xs font-bold text-left text-gray-500 uppercase"
                 >
-                  Feed ID
+                  Feed #
                 </td>
                 <td
                   className="px-6 py-3 text-xs font-bold text-left text-gray-500 uppercase"
@@ -100,7 +100,12 @@ export const FeedList: React.FC<FeedListProps> = ({ userId, feedList }): JSX.Ele
             </thead>
             <tbody className="divide-y divide-gray-200">
                 {feedListState.map((feed: Feed) => {
-                  return <FeedRow removalHandler={removeFeedHandler} feed={feed} />
+                  return <FeedRow 
+                    key={feedListState.indexOf(feed)}
+                    removalHandler={removeFeedHandler} 
+                    feedNumber={feedListState.indexOf(feed) + 1}
+                    feed={feed}
+                  />
                 })}
                 <NewFeedRow addNewFeedStateHandler={addNewFeedHandler} />
             </tbody>

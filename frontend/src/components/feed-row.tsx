@@ -6,11 +6,12 @@ import { Feed } from '../types/user'
 
 
 interface FeedRowProps {
+  feedNumber: number
   feed: Feed
   removalHandler: (feedId: number) => void
 }
 
-export const FeedRow = ({feed, removalHandler}: FeedRowProps) => {
+export const FeedRow = ({feedNumber, feed, removalHandler}: FeedRowProps) => {
 
   const removeFeedHandler = (event: React.MouseEvent<HTMLInputElement>) => {
     removalHandler(feed.feedId)
@@ -18,7 +19,7 @@ export const FeedRow = ({feed, removalHandler}: FeedRowProps) => {
 
   return (
       <tr>
-        <td  className="w-1/12 px-6 py-4 text-sm font-medium text-gray-800 whitespace-nowrap">{feed.feedId}</td>
+        <td  className="w-1/12 px-6 py-4 text-sm font-medium text-gray-800 whitespace-nowrap">{feedNumber}</td>
         <td  className="w-3/12 px-6 py-4 text-sm font-medium text-gray-800 whitespace-nowrap">{feed.title}</td>
         <td  className="w-3/12 px-6 py-4 text-sm font-medium text-gray-800 whitespace-nowrap">{feed.url}</td>
         <td  className="w-2/12 px-6 py-4 text-sm font-medium text-gray-800 whitespace-nowrap">{feed.timeFormat}</td>
