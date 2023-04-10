@@ -180,10 +180,6 @@ func getUserHandler(c *gin.Context) {
 func addUserHandler(c *gin.Context) {
 	appG := response.Gin{C: c}
 
-	// TODO: Error handling
-	//	- IDOR
-	//  - gracefully send error response
-
 	var createUserParams UserAccount
 	if err := appG.C.BindJSON(&createUserParams); err != nil {
 		log.Println("error binding user params JSON to UserAccount struct", err)
@@ -286,21 +282,6 @@ func deleteFeedHandler(c *gin.Context) {
 
 	requestUserId := appG.C.Param("userId")
 	requestFeedId := appG.C.Param("feedId")
-
-	//update := expression.Remove(expression.Name(fmt.Sprintf("feedList.%s", requestFeedId)))
-	//condition := expression.AttributeExists(expression.Name(fmt.Sprintf("feedList.%s", requestFeedId)))
-
-	//expr, err := expression.NewBuilder().WithUpdate(update).WithCondition(condition).Build()
-	//if err != nil {
-	//	c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-	//	return
-	//}
-
-	// Define input for UpdateItem operation
-
-	// write a dynamodbInput (like below) that removes the feed from the user's feedList in dynamodb.
-	// feedList is a ddb map
-
 	input := &dynamodb.UpdateItemInput{
 		ExpressionAttributeNames: map[string]*string{
 			"#fID": aws.String(requestFeedId),
@@ -367,7 +348,7 @@ func main() {
 	{
 		userRoute.GET("/:userId", jwtMiddleware, getUserHandler)
 		userRoute.POST("/:userId", jwtMiddleware, addUserHandler)
-		userRoute.DELETE("/:userId", jwtMiddleware, deleteUserHandler) // unimplemented
+		userRoute.DELETE("/:userId", jwtMiddleware, deleteUserHandler)
 
 		userRoute.POST("/:userId/feeds", jwtMiddleware)
 
