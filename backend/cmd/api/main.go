@@ -219,15 +219,9 @@ func addFeedHandler(c *gin.Context) {
 	}
 	log.Printf("userId: %d\n", requestUserID)
 
-	user, err := fetchUser(requestUserID)
-	if err != nil {
-		log.Println("error fetching user from DDB", err)
-		return
-	}
-	userFeedListLength := strconv.Itoa(len(user.FeedList))
-
+  newFeedId := strconv.FormatInt(time.Now().UnixNano()/(1<<22), 10)
 	newFeed := Feed{
-		FeedID:     strconv.FormatInt(time.Now().UnixNano()/(1<<22), 10),
+		FeedID:     newFeedId,
 		Title:      addFeedParams.Title,
 		Url:        addFeedParams.URL,
 		TimeFormat: "z",
@@ -241,7 +235,7 @@ func addFeedHandler(c *gin.Context) {
 
 	addFeedInput := &dynamodb.UpdateItemInput{
 		ExpressionAttributeNames: map[string]*string{
-			"#fID": aws.String(userFeedListLength),
+			"#fID": aws.String(newFeedId),
 		},
 		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
 			":f": marshalledFeed,
@@ -269,7 +263,35 @@ func addFeedHandler(c *gin.Context) {
 
 func getFeedHandler(c *gin.Context) {
 	appG := response.Gin{C: c}
-	appG.Response(http.StatusNotImplemented, "Method GET for resource /user/:userId/feed not implemented")
+
+	requestUserID, err := strconv.Atoi(appG.C.Param("userId"))
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	log.Printf("userId: %d\n", requestUserID)
+
+	feedId := appG.C.Param("feedId")
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	log.Printf("feedId: %s\n", feedId)
+
+	user, err := fetchUser(requestUserID)
+	if err != nil {
+		log.Println("error fetching user from DDB", err)
+		return
+	}
+
+
+  feed, found := user.FeedList[feedId]
+  if (!found) {
+    appG.Response(http.StatusNotFound, "Unable to find feed")
+    return
+  }
+
+	appG.Response(http.StatusOK, feed)
 }
 
 func deleteUserHandler(c *gin.Context) {
