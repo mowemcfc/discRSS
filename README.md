@@ -32,7 +32,9 @@ make deploy
 - [ ] remove timestamp from frontend
 - [ ] fix deploy to accomodate new folder structure
 - [x] change User.FeedList from DDB array to Map
-- [ ] use discord oauth instead of google
+- [x] use discord oauth instead of google
+  - [x] enable discord auth
+  - [x] disable google auth
 
 ### Backlog 
 

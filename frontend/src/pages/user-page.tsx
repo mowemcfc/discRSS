@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { Feed, DiscordChannel } from "../types/user";
+import { UserProfile } from "../components/profile";
 import { Navigate } from "react-router-dom";
 import { FeedList } from "../components/feed-list";
 import { SiteBanner } from '../components/site-banner'
@@ -47,6 +48,7 @@ export const UserPage: React.FC = () => {
 
   return (
     <div>
+      <UserProfile/>
       <div className="flex-initial justify-center px-2 py-3 bg-blue-300"> 
         <SiteBanner />
       </div>
