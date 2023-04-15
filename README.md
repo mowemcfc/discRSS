@@ -16,22 +16,23 @@ make deploy
 
 ### Priority
 
-- [ ] add feed button
+- [x] add feed button
   - [x] ui component
   - [x] onSubmit handler
     - [x] local data
     - [x] post request to API route
   - [x] backend handler
   - [ ] error checks/responses from handler
-- [ ] remove feed button
+- [x] remove feed button
   - [x] ui component
-  - [ ] onsubmit handler
-    - [ ] post request to API route
-    - [ ] set local state
-  - [ ] backend handler
+  - [x] onsubmit handler
+    - [x] post request to API route
+    - [x] set local state
+  - [x] backend handler
 - [ ] remove timestamp from frontend
 - [ ] fix deploy to accomodate new folder structure
-- [ ] change User.FeedList from DDB array to Map
+- [x] change User.FeedList from DDB array to Map
+- [ ] use discord oauth instead of google
 
 ### Backlog 
 
