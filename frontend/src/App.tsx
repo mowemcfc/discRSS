@@ -1,7 +1,6 @@
 import React from 'react';
 import './App.css';
 
-import { LoginPage } from './pages/login-page';
 import { UserPage } from './pages/user-page';
 
 import {
