@@ -3,6 +3,7 @@ package sessions
 import (
 	"fmt"
 	"os"
+  "log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -25,7 +26,7 @@ func GetAWSSession(isLocal bool) (*session.Session, error) {
 		return nil, fmt.Errorf("error creating AWS session: \n%s", err)
 	}
 
-	fmt.Println("successfully opened AWS session")
+	log.Println("Opened AWS session")
 
 	return sess, nil
 }
@@ -44,7 +45,7 @@ func GetDiscordSession(token string) (*discordgo.Session, error) {
 		return nil, fmt.Errorf("error opening Discord session:\n  %s", err)
 	}
 
-	fmt.Println("successfully opened discord session")
+	log.Println("Opened Discord session")
 
 	return discord, nil
 }
