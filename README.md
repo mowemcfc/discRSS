@@ -36,6 +36,10 @@ make deploy
   - [x] enable discord auth
   - [x] disable google auth
 - [ ] tests 
+ - [x] make code testable by using DI
+ - [ ] implement tests
+  - [ ] user
+  - [ ] feed
 - [ ] create user upon login
 
 ### Backlog 
