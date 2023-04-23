@@ -138,7 +138,7 @@ func fetchDiscordToken(sess *session.Session) (string, error) {
 	return *result.SecretString, nil
 }
 
-func fetchUser(sess *session.Session, userID int) (*UserAccount, error) {
+func FetchUser(sess *session.Session, userID int) (*UserAccount, error) {
 
 	getUserInput := &dynamodb.GetItemInput{
 		Key: map[string]*dynamodb.AttributeValue{
@@ -274,7 +274,7 @@ func scanHandler(userID int) {
 	}
 
 	log.Printf("userID: %d", userID)
-	user, err := fetchUser(aws, userID)
+	user, err := FetchUser(aws, userID)
 	if err != nil {
 		fmt.Println("error fetching user from DDB: ", err)
 		return

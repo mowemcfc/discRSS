@@ -35,6 +35,8 @@ make deploy
 - [x] use discord oauth instead of google
   - [x] enable discord auth
   - [x] disable google auth
+- [ ] tests 
+- [ ] create user upon login
 
 ### Backlog 
 
