@@ -5,13 +5,14 @@ import (
 	"strconv"
 	"log"
 	"net/http"
-
+  "net/url"
 
 	"github.com/mowemcfc/discRSS/models"
 	"github.com/mowemcfc/discRSS/internal/response"
 	"github.com/mowemcfc/discRSS/internal/config"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/gin-gonic/gin"
@@ -31,15 +32,26 @@ func (app *App) AddFeedHandler(c *gin.Context) {
 
 	if err := appG.C.BindJSON(&addFeedParams); err != nil {
 		log.Println("error binding addFeed params JSON to addFeedParams struct", err)
+    appG.Response(http.StatusBadRequest, interface{}(nil))
 		return
 	}
+
+  _, err := url.ParseRequestURI(addFeedParams.URL)
+  if err != nil {
+    log.Printf("error parsing AddFeedHandler request URL %s: %s ", addFeedParams.URL, err)
+    appG.Response(http.StatusBadRequest, interface{}(nil))
+  }
 
 	requestUserID, err := strconv.Atoi(appG.C.Param("userId"))
 	if err != nil {
 		log.Println(err)
 		return
 	}
-	log.Printf("userId: %d\n", requestUserID)
+
+  if requestUserID < 0 {
+    log.Printf("error: request userId was less than 0: %d", requestUserID)
+    appG.Response(http.StatusBadRequest, interface{}(nil))
+  }
 
   newFeedId := strconv.FormatInt(time.Now().UnixNano()/(1<<22), 10)
 	newFeed := models.Feed{
@@ -52,6 +64,7 @@ func (app *App) AddFeedHandler(c *gin.Context) {
 	marshalledFeed, err := dynamodbattribute.Marshal(newFeed)
 	if err != nil {
 		log.Println("error marshalling feed struct into dynamodbattribute map", err)
+    appG.Response(http.StatusInternalServerError, interface{}(nil))
 		return
 	}
 
@@ -75,7 +88,26 @@ func (app *App) AddFeedHandler(c *gin.Context) {
 
 	updatedValues, err := app.DdbSvc.UpdateItem(addFeedInput)
 	if err != nil {
-		log.Printf("error updating user: %d's feed list with feed: %v, %s\n", requestUserID, marshalledFeed, err.Error())
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case dynamodb.ErrCodeProvisionedThroughputExceededException:
+        log.Printf("error adding feed for user %d: %s %s", requestUserID, dynamodb.ErrCodeProvisionedThroughputExceededException, aerr.Error())
+        appG.Response(http.StatusInternalServerError, interface{}(nil))
+			case dynamodb.ErrCodeResourceNotFoundException:
+        log.Printf("error adding feed for user %d: %s %s", requestUserID, dynamodb.ErrCodeResourceNotFoundException, aerr.Error())
+        appG.Response(http.StatusNotFound, interface{}(nil))
+			case dynamodb.ErrCodeRequestLimitExceeded:
+				log.Printf("error adding feed for user %d: %s %s", requestUserID, dynamodb.ErrCodeRequestLimitExceeded, aerr.Error())
+        appG.Response(http.StatusInternalServerError, interface{}(nil))
+			case dynamodb.ErrCodeInternalServerError:
+				log.Printf("error adding feed for user %d: %s %s", requestUserID, dynamodb.ErrCodeInternalServerError, aerr.Error())
+        appG.Response(http.StatusInternalServerError, interface{}(nil))
+			default:
+				log.Printf("error adding feed for user %d: %s", requestUserID, aerr.Error())
+			}
+		} else {
+			log.Printf("error adding feed for user %d: %s", requestUserID, err.Error())
+		}
 		return
 	}
 	log.Printf("%v", updatedValues.Attributes)

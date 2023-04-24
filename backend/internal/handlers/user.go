@@ -6,52 +6,17 @@ import (
 	"strconv"
 	"log"
 	"net/http"
-  "os"
-
-
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/secretsmanager"
 
 	"github.com/mowemcfc/discRSS/models"
 	"github.com/mowemcfc/discRSS/internal/response"
 	"github.com/mowemcfc/discRSS/internal/config"
-	"github.com/mowemcfc/discRSS/internal/sessions"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/gin-gonic/gin"
-	ginLambdaAdapter "github.com/awslabs/aws-lambda-go-api-proxy/gin"
 )
-
-
-type App struct {
-  *gin.Engine
-  GinLambda *ginLambdaAdapter.GinLambda
-  AwsSession *session.Session
-  DdbSvc *dynamodb.DynamoDB
-  SecretsManagerSvc *secretsmanager.SecretsManager
-  AppConfig *models.AppConfig
-  IsLocal bool
-}
-
-func NewApp() (*App, error) {
-  app := &App{
-    Engine: gin.Default(),
-    IsLocal: os.Getenv("LAMBDA_TASK_ROOT") == "",
-  }
-
-  awsSession, err := sessions.GetAWSSession(app.IsLocal)
-	if err != nil {
-    return nil, fmt.Errorf("error opening AWS session: ", err)
-	}
-  app.AwsSession = awsSession
-	app.DdbSvc = dynamodb.New(app.AwsSession)
-	app.SecretsManagerSvc = secretsmanager.New(app.AwsSession)
-
-  return app, nil
-}
 
 
 
@@ -70,21 +35,24 @@ func (app *App) FetchUser(userID int) (*models.UserAccount, error) {
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
 			case dynamodb.ErrCodeProvisionedThroughputExceededException:
-				return nil, fmt.Errorf("%s %s", dynamodb.ErrCodeProvisionedThroughputExceededException, aerr.Error())
+        log.Printf("error fetching user %d: %s %s", userID, dynamodb.ErrCodeProvisionedThroughputExceededException, aerr.Error())
+        appG.Response(http.StatusInternalServerError, interface{}(nil))
 			case dynamodb.ErrCodeResourceNotFoundException:
-				return nil, fmt.Errorf("%s %s", dynamodb.ErrCodeResourceNotFoundException, aerr.Error())
+        log.Printf("error fetching user %d: %s %s", userID, dynamodb.ErrCodeResourceNotFoundException, aerr.Error())
+        appG.Response(http.StatusNotFound, interface{}(nil))
 			case dynamodb.ErrCodeRequestLimitExceeded:
-				return nil, fmt.Errorf("%s %s", dynamodb.ErrCodeRequestLimitExceeded, aerr.Error())
+				log.Printf("error fetching user %d: %s %s", userID, dynamodb.ErrCodeRequestLimitExceeded, aerr.Error())
+        appG.Response(http.StatusInternalServerError, interface{}(nil))
 			case dynamodb.ErrCodeInternalServerError:
-				return nil, fmt.Errorf("%s %s", dynamodb.ErrCodeInternalServerError, aerr.Error())
+				log.Printf("error fetching user %d: %s %s", userID, dynamodb.ErrCodeInternalServerError, aerr.Error())
+        appG.Response(http.StatusInternalServerError, interface{}(nil))
 			default:
-				return nil, fmt.Errorf("%s", aerr.Error())
+				log.Printf("error fetching user %d: %s", userID, aerr.Error())
 			}
 		} else {
-			// Print the error, cast err to awserr.Error to get the Code and
-			// Message from an error.
-			return nil, fmt.Errorf(err.Error())
+			log.Printf("error fetching user %d: %s", userID, err.Error())
 		}
+		return
 	}
 
 	unmarshalled := models.UserAccount{}
