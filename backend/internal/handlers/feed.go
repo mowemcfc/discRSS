@@ -40,6 +40,7 @@ func (app *App) AddFeedHandler(c *gin.Context) {
   if err != nil {
     log.Printf("error parsing AddFeedHandler request URL %s: %s ", addFeedParams.URL, err)
     appG.Response(http.StatusBadRequest, interface{}(nil))
+    return
   }
 
 	requestUserID, err := strconv.Atoi(appG.C.Param("userId"))
@@ -51,7 +52,9 @@ func (app *App) AddFeedHandler(c *gin.Context) {
   if requestUserID < 0 {
     log.Printf("error: request userId was less than 0: %d", requestUserID)
     appG.Response(http.StatusBadRequest, interface{}(nil))
+    return
   }
+
 
   newFeedId := strconv.FormatInt(time.Now().UnixNano()/(1<<22), 10)
 	newFeed := models.Feed{

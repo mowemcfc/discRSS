@@ -51,8 +51,6 @@ func main() {
 		userRoute.POST("/:userId", jwtMiddleware, app.AddUserHandler)
 		userRoute.DELETE("/:userId", jwtMiddleware, app.DeleteUserHandler)
 
-		userRoute.POST("/:userId/feeds", jwtMiddleware)
-
 		userRoute.GET("/:userId/feed/:feedId", jwtMiddleware, app.GetFeedHandler)
 		userRoute.POST("/:userId/feed", jwtMiddleware, app.AddFeedHandler)
 		userRoute.DELETE("/:userId/feed/:feedId", jwtMiddleware, app.DeleteFeedHandler)

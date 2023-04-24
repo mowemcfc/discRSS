@@ -36,23 +36,19 @@ func (app *App) FetchUser(userID int) (*models.UserAccount, error) {
 			switch aerr.Code() {
 			case dynamodb.ErrCodeProvisionedThroughputExceededException:
         log.Printf("error fetching user %d: %s %s", userID, dynamodb.ErrCodeProvisionedThroughputExceededException, aerr.Error())
-        appG.Response(http.StatusInternalServerError, interface{}(nil))
 			case dynamodb.ErrCodeResourceNotFoundException:
         log.Printf("error fetching user %d: %s %s", userID, dynamodb.ErrCodeResourceNotFoundException, aerr.Error())
-        appG.Response(http.StatusNotFound, interface{}(nil))
 			case dynamodb.ErrCodeRequestLimitExceeded:
 				log.Printf("error fetching user %d: %s %s", userID, dynamodb.ErrCodeRequestLimitExceeded, aerr.Error())
-        appG.Response(http.StatusInternalServerError, interface{}(nil))
 			case dynamodb.ErrCodeInternalServerError:
 				log.Printf("error fetching user %d: %s %s", userID, dynamodb.ErrCodeInternalServerError, aerr.Error())
-        appG.Response(http.StatusInternalServerError, interface{}(nil))
 			default:
 				log.Printf("error fetching user %d: %s", userID, aerr.Error())
 			}
 		} else {
 			log.Printf("error fetching user %d: %s", userID, err.Error())
 		}
-		return
+    return nil, fmt.Errorf("error fetching user %d: %s", userID, err.Error())
 	}
 
 	unmarshalled := models.UserAccount{}

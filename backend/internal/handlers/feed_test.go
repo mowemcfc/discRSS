@@ -8,6 +8,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+  "github.com/mowemcfc/discRSS/internal/response"
+
 	"github.com/aws/aws-sdk-go/aws/awserr"
   "github.com/aws/aws-sdk-go/service/dynamodb"
   "github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
@@ -26,6 +28,9 @@ func (m mockDynamoDBService) UpdateItem(input *dynamodb.UpdateItemInput) (*dynam
 	return &dynamodb.UpdateItemOutput{}, nil
 }
 func (m mockDynamoDBService) GetItem(input *dynamodb.GetItemInput) (*dynamodb.GetItemOutput, error) {
+  if *input.Key["userId"].N == "9999" {
+    return nil, awserr.New(dynamodb.ErrCodeResourceNotFoundException, "Resource not found", nil)
+  }
 	return &dynamodb.GetItemOutput{}, nil
 }
 func (m mockDynamoDBService) PutItem(input *dynamodb.PutItemInput) (*dynamodb.PutItemOutput, error) {
@@ -48,6 +53,7 @@ func TestAddFeedHandler(t *testing.T) {
 		userId             int
 		addFeedParams      AddFeedParams
 		expectedStatusCode int
+    expectedResponseBody   map[string]interface{}
 	}{
 		{
 			name: "Valid request",
@@ -57,6 +63,10 @@ func TestAddFeedHandler(t *testing.T) {
 				URL:   "https://www.samplefeed.com/rss",
 			},
 			expectedStatusCode: http.StatusOK,
+      expectedResponseBody: map[string]interface{}{
+        "title": "Sample Feed",
+        "url": "https://www.samplefeed.com/rss",
+      },
 		},
 		{
 			name: "Invalid URL",
@@ -96,6 +106,17 @@ func TestAddFeedHandler(t *testing.T) {
 			router.ServeHTTP(resp, req)
 
 			assert.Equal(t, test.expectedStatusCode, resp.Code)
+
+      var response response.ApiGatewayLambdaProxyResponse
+			json.Unmarshal(resp.Body.Bytes(), &response)
+      fmt.Printf("%v\n", response)
+
+      responseBodyBytes, _ := json.Marshal(response.Body)
+      var responseBody map[string]interface{}
+      json.Unmarshal(responseBodyBytes, &responseBody)
+      
+			assert.Equal(t, test.expectedResponseBody["title"], responseBody["title"])
+			assert.Equal(t, test.expectedResponseBody["url"], responseBody["url"])
 		})
 	}
 }
