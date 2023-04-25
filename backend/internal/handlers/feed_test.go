@@ -31,9 +31,6 @@ func (m mockDynamoDBService) GetItem(input *dynamodb.GetItemInput) (*dynamodb.Ge
   if *input.Key["userId"].N == "9999" {
     return nil, awserr.New(dynamodb.ErrCodeResourceNotFoundException, "Resource not found", nil)
   }
-  if *input.Key["userId"].N == "1" {
-    return &dynamodb.GetItemOutput{}, nil
-  }
 	return &dynamodb.GetItemOutput{}, nil
 }
 func (m mockDynamoDBService) PutItem(input *dynamodb.PutItemInput) (*dynamodb.PutItemOutput, error) {
@@ -146,9 +143,6 @@ func TestGetFeedHandler(t *testing.T) {
 			userId:             1,
 			feedId:             "1",
 			expectedStatusCode: http.StatusOK,
-      expectedResponseBody: map[string]interface{}{
-
-      },
 		},
 		{
 			name:               "Invalid UserID",
