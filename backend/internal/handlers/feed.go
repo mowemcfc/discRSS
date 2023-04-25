@@ -124,16 +124,28 @@ func (app *App) GetFeedHandler(c *gin.Context) {
 	requestUserID, err := strconv.Atoi(appG.C.Param("userId"))
 	if err != nil {
 		log.Println(err)
+    appG.Response(http.StatusBadRequest, interface{}(nil))
 		return
 	}
-	log.Printf("userId: %d\n", requestUserID)
 
-	feedId := appG.C.Param("feedId")
+  if requestUserID < 0 {
+    log.Println("error: userId value was less than 0")
+    appG.Response(http.StatusBadRequest, interface{}(nil))
+    return
+  }
+
+	requestFeedId, err := strconv.Atoi(appG.C.Param("feedId"))
 	if err != nil {
 		log.Println(err)
+    appG.Response(http.StatusBadRequest, interface{}(nil))
 		return
 	}
-	log.Printf("feedId: %s\n", feedId)
+
+  if requestFeedId < 0 {
+    log.Println("error: feedId value was less than 0")
+    appG.Response(http.StatusBadRequest, interface{}(nil))
+    return
+  }
 
 	user, err := app.FetchUser(requestUserID)
 	if err != nil {
@@ -141,8 +153,7 @@ func (app *App) GetFeedHandler(c *gin.Context) {
 		return
 	}
 
-
-  feed, found := user.FeedList[feedId]
+  feed, found := user.FeedList[strconv.Itoa(requestFeedId)]
   if (!found) {
     appG.Response(http.StatusNotFound, "Unable to find feed")
     return
