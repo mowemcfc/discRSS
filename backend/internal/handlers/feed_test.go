@@ -9,9 +9,8 @@ import (
 	"testing"
 
   "github.com/mowemcfc/discRSS/internal/response"
+  "github.com/mowemcfc/discRSS/internal/dynamodb"
 
-	"github.com/aws/aws-sdk-go/aws/awserr"
-  "github.com/aws/aws-sdk-go/service/dynamodb"
   "github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -21,26 +20,10 @@ type mockDynamoDBService struct {
 	dynamodbiface.DynamoDBAPI
 }
 
-func (m mockDynamoDBService) UpdateItem(input *dynamodb.UpdateItemInput) (*dynamodb.UpdateItemOutput, error) {
-  if *input.Key["userId"].N == "9999" {
-    return nil, awserr.New(dynamodb.ErrCodeResourceNotFoundException, "Resource not found", nil)
-  }
-	return &dynamodb.UpdateItemOutput{}, nil
-}
-func (m mockDynamoDBService) GetItem(input *dynamodb.GetItemInput) (*dynamodb.GetItemOutput, error) {
-  if *input.Key["userId"].N == "9999" {
-    return nil, awserr.New(dynamodb.ErrCodeResourceNotFoundException, "Resource not found", nil)
-  }
-	return &dynamodb.GetItemOutput{}, nil
-}
-func (m mockDynamoDBService) PutItem(input *dynamodb.PutItemInput) (*dynamodb.PutItemOutput, error) {
-	return &dynamodb.PutItemOutput{}, nil
-}
-
 func TestAddFeedHandler(t *testing.T) {
 	app := &App{
     Engine: gin.Default(),
-		DdbSvc: mockDynamoDBService{},
+		DdbSvc: dynamodb.NewMockDynamoDB(),
 	}
 
 	gin.SetMode(gin.TestMode)
@@ -57,15 +40,15 @@ func TestAddFeedHandler(t *testing.T) {
 	}{
 		{
 			name: "Valid request",
-			userId: 1,
+			userId: 0,
 			addFeedParams: AddFeedParams{
-				Title: "Sample Feed",
-				URL:   "https://www.samplefeed.com/rss",
+				Title: "feed1",
+				URL:   "https://feed1.com/rss",
 			},
 			expectedStatusCode: http.StatusOK,
       expectedResponseBody: map[string]interface{}{
-        "title": "Sample Feed",
-        "url": "https://www.samplefeed.com/rss",
+        "title": "feed1",
+        "url": "https://feed1.com/rss",
       },
 		},
 		{
@@ -123,7 +106,8 @@ func TestAddFeedHandler(t *testing.T) {
 
 func TestGetFeedHandler(t *testing.T) {
 	app := &App{
-		DdbSvc: mockDynamoDBService{},
+    Engine: gin.Default(),
+		DdbSvc: dynamodb.NewMockDynamoDB(),
 	}
 
 	gin.SetMode(gin.TestMode)
@@ -140,8 +124,8 @@ func TestGetFeedHandler(t *testing.T) {
 	}{
 		{
 			name:               "Valid request",
-			userId:             1,
-			feedId:             "1",
+			userId:             0,
+			feedId:             "0",
 			expectedStatusCode: http.StatusOK,
 		},
 		{
@@ -152,7 +136,7 @@ func TestGetFeedHandler(t *testing.T) {
 		},
 		{
 			name:               "Invalid feed ID",
-			userId:             1,
+			userId:             0,
 			feedId:             "invalid_feed_id",
 			expectedStatusCode: http.StatusBadRequest,
 		},
@@ -172,7 +156,8 @@ func TestGetFeedHandler(t *testing.T) {
 
 func TestDeleteFeedHandler(t *testing.T) {
 	app := &App{
-		DdbSvc: mockDynamoDBService{},
+    Engine: gin.Default(),
+		DdbSvc: dynamodb.NewMockDynamoDB(),
 	}
 
 	gin.SetMode(gin.TestMode)
@@ -188,13 +173,13 @@ func TestDeleteFeedHandler(t *testing.T) {
 	}{
 		{
 			name:               "Valid request",
-			userId:             1,
-			feedId:             "123",
+			userId:             0,
+			feedId:             "0",
 			expectedStatusCode: http.StatusNoContent,
 		},
 		{
 			name:               "Invalid feed ID",
-			userId:             1,
+			userId:             0,
 			feedId:             "invalid_feed_id",
 			expectedStatusCode: http.StatusNoContent,
 		},

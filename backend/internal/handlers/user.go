@@ -19,7 +19,6 @@ import (
 )
 
 
-
 func (app *App) FetchUser(userID int) (*models.UserAccount, error) {
 	getUserInput := &dynamodb.GetItemInput{
 		Key: map[string]*dynamodb.AttributeValue{

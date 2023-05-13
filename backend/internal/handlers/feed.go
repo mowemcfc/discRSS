@@ -84,12 +84,11 @@ func (app *App) AddFeedHandler(c *gin.Context) {
 			},
 		},
 		ConditionExpression: aws.String("attribute_not_exists(feedList.#fID)"),
-		ReturnValues:        aws.String("UPDATED_NEW"),
 		UpdateExpression:    aws.String("SET feedList.#fID = :f"),
 		TableName:           aws.String(config.UserTableName),
 	}
 
-	updatedValues, err := app.DdbSvc.UpdateItem(addFeedInput)
+	_, err = app.DdbSvc.UpdateItem(addFeedInput)
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
@@ -113,7 +112,6 @@ func (app *App) AddFeedHandler(c *gin.Context) {
 		}
 		return
 	}
-	log.Printf("%v", updatedValues.Attributes)
 
 	appG.Response(http.StatusOK, newFeed)
 }

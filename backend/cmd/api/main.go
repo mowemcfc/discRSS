@@ -56,7 +56,6 @@ func main() {
 		userRoute.DELETE("/:userId/feed/:feedId", jwtMiddleware, app.DeleteFeedHandler)
 	}
 
-
 	if app.IsLocal {
 		log.Println("Inside LOCAL environment, using default router")
 		app.Engine.Run("0.0.0.0:9001")
