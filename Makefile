@@ -2,6 +2,12 @@
 
 all: backend provision clean
 
+run-backend-api:
+	$(MAKE) -C backend/ run-api
+
+run-backend-scanner:
+	$(MAKE) -C backend/ run-scanner
+
 backend:
 	$(MAKE) -C backend/ amd
 
