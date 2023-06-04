@@ -165,6 +165,17 @@ func (app *App) DeleteFeedHandler(c *gin.Context) {
 
 	requestUserId := appG.C.Param("userId")
 	requestFeedId := appG.C.Param("feedId")
+  requestFeedIdInt, err := strconv.Atoi(requestFeedId)
+  if err != nil {
+    log.Println("error converting request feed ID to int")
+    appG.Response(http.StatusBadRequest, interface{}(nil))
+    return
+  }
+  if requestFeedIdInt < 0 {
+    log.Println("error: feedId value was less than 0")
+    appG.Response(http.StatusBadRequest, interface{}(nil))
+    return
+  }
 	input := &dynamodb.UpdateItemInput{
 		ExpressionAttributeNames: map[string]*string{
 			"#fID": aws.String(requestFeedId),
@@ -181,7 +192,7 @@ func (app *App) DeleteFeedHandler(c *gin.Context) {
 		TableName:        aws.String(config.UserTableName),
 	}
 
-	_, err := app.DdbSvc.UpdateItem(input)
+	_, err = app.DdbSvc.UpdateItem(input)
 	if err != nil {
 		log.Println("error deleting feed row:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
