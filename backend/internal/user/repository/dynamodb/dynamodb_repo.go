@@ -31,7 +31,7 @@ func NewDynamoDBUserRepository (client dynamodbiface.DynamoDBAPI) UserRepository
   return &DynamoDBUserRepository{client}
 }
 
-func (d *DynamoDBUserRepository) GetUser(ctx gin.Context) (*models.UserAccount, error) { 
+func (d *DynamoDBUserRepository) GetUser(ctx *gin.Context) (*models.UserAccount, error) { 
   userId := ctx.Query("userId")
 	getUserInput := &dynamodb.GetItemInput{
 		Key: map[string]*dynamodb.AttributeValue{
@@ -60,7 +60,7 @@ func (d *DynamoDBUserRepository) GetUser(ctx gin.Context) (*models.UserAccount, 
 
 	return &unmarshalled, nil
 }
-func (d *DynamoDBUserRepository) CreateUser(ctx gin.Context) (error) { return nil }
-func (d *DynamoDBUserRepository) AddFeed(ctx gin.Context) (*models.Feed, error) { return &models.Feed{}, nil }
-func (d *DynamoDBUserRepository) UpdateFeed(ctx gin.Context) (*models.Feed, error) { return &models.Feed{}, nil }
-func (d *DynamoDBUserRepository) RemoveFeed(ctx gin.Context) (error) { return nil }
+func (d *DynamoDBUserRepository) CreateUser(ctx *gin.Context) (error) { return nil }
+func (d *DynamoDBUserRepository) AddFeed(ctx *gin.Context) (*models.Feed, error) { return &models.Feed{}, nil }
+func (d *DynamoDBUserRepository) UpdateFeed(ctx *gin.Context) (*models.Feed, error) { return &models.Feed{}, nil }
+func (d *DynamoDBUserRepository) RemoveFeed(ctx *gin.Context) (error) { return nil }
