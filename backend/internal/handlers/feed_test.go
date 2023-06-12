@@ -9,7 +9,7 @@ import (
 	"testing"
 
   "github.com/mowemcfc/discRSS/internal/response"
-  "github.com/mowemcfc/discRSS/internal/dynamodb"
+  "github.com/mowemcfc/discRSS/internal/user/repository/dynamodb"
 
   "github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
 	"github.com/gin-gonic/gin"
@@ -181,7 +181,7 @@ func TestDeleteFeedHandler(t *testing.T) {
 			name:               "Invalid feed ID",
 			userId:             0,
 			feedId:             "invalid_feed_id",
-			expectedStatusCode: http.StatusNoContent,
+			expectedStatusCode: http.StatusBadRequest,
 		},
 	}
 
