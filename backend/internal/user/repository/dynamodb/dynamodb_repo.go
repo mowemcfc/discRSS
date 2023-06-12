@@ -20,11 +20,11 @@ type DynamoDBUserRepository struct {
 }
 
 type UserRepository interface {
-  GetUser(gin.Context) (*models.UserAccount, error)
-  CreateUser(gin.Context) (error)
-  AddFeed(gin.Context) (*models.Feed, error)
-  UpdateFeed(gin.Context) (*models.Feed, error)
-  RemoveFeed(gin.Context) (error)
+  GetUser(*gin.Context) (*models.UserAccount, error)
+  CreateUser(*gin.Context) (error)
+  AddFeed(*gin.Context) (*models.Feed, error)
+  UpdateFeed(*gin.Context) (*models.Feed, error)
+  RemoveFeed(*gin.Context) (error)
 }
 
 func NewDynamoDBUserRepository (client dynamodbiface.DynamoDBAPI) UserRepository {
