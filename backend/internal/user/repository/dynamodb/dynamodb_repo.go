@@ -1,9 +1,7 @@
 package dynamodb
 
 import (
-  "context"
   "log"
-  "strconv"
   "fmt"
 
   "github.com/mowemcfc/discRSS/models"
