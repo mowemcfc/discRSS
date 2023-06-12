@@ -1,15 +1,14 @@
 package handlers
 
-
 import (
 	"fmt"
-	"strconv"
 	"log"
 	"net/http"
+	"strconv"
 
-	"github.com/mowemcfc/discRSS/models"
-	"github.com/mowemcfc/discRSS/internal/response"
 	"github.com/mowemcfc/discRSS/internal/config"
+	"github.com/mowemcfc/discRSS/internal/response"
+	"github.com/mowemcfc/discRSS/models"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -17,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/gin-gonic/gin"
 )
-
 
 func (app *App) FetchUser(userID int) (*models.UserAccount, error) {
 	getUserInput := &dynamodb.GetItemInput{
@@ -34,9 +32,9 @@ func (app *App) FetchUser(userID int) (*models.UserAccount, error) {
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
 			case dynamodb.ErrCodeProvisionedThroughputExceededException:
-        log.Printf("error fetching user %d: %s %s", userID, dynamodb.ErrCodeProvisionedThroughputExceededException, aerr.Error())
+				log.Printf("error fetching user %d: %s %s", userID, dynamodb.ErrCodeProvisionedThroughputExceededException, aerr.Error())
 			case dynamodb.ErrCodeResourceNotFoundException:
-        log.Printf("error fetching user %d: %s %s", userID, dynamodb.ErrCodeResourceNotFoundException, aerr.Error())
+				log.Printf("error fetching user %d: %s %s", userID, dynamodb.ErrCodeResourceNotFoundException, aerr.Error())
 			case dynamodb.ErrCodeRequestLimitExceeded:
 				log.Printf("error fetching user %d: %s %s", userID, dynamodb.ErrCodeRequestLimitExceeded, aerr.Error())
 			case dynamodb.ErrCodeInternalServerError:
@@ -47,7 +45,7 @@ func (app *App) FetchUser(userID int) (*models.UserAccount, error) {
 		} else {
 			log.Printf("error fetching user %d: %s", userID, err.Error())
 		}
-    return nil, fmt.Errorf("error fetching user %d: %s", userID, err.Error())
+		return nil, fmt.Errorf("error fetching user %d: %s", userID, err.Error())
 	}
 
 	unmarshalled := models.UserAccount{}
@@ -115,15 +113,12 @@ func (app *App) GetUserHandler(c *gin.Context) {
 	user, err := app.FetchUser(requestUserID)
 	if err != nil {
 		log.Println("error fetching user from DDB", err)
+		appG.Response(http.StatusInternalServerError, interface{}(nil))
 		return
 	}
 
-	log.Printf("user %s channels: %+v", user.UserID, user.ChannelList)
-	log.Printf("user %s feeds: %+v", user.UserID, user.FeedList)
-
 	appG.Response(http.StatusOK, user)
 }
-
 
 func (app *App) AddUserHandler(c *gin.Context) {
 	appG := response.Gin{C: c}
@@ -149,4 +144,3 @@ func (app *App) DeleteUserHandler(c *gin.Context) {
 	appG := response.Gin{C: c}
 	appG.Response(http.StatusNotImplemented, "Method DELETE for resource /user not implemented")
 }
-

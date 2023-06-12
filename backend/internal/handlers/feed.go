@@ -1,15 +1,15 @@
 package handlers
 
 import (
-  "time"
-	"strconv"
 	"log"
 	"net/http"
-  "net/url"
+	"net/url"
+	"strconv"
+	"time"
 
-	"github.com/mowemcfc/discRSS/models"
-	"github.com/mowemcfc/discRSS/internal/response"
 	"github.com/mowemcfc/discRSS/internal/config"
+	"github.com/mowemcfc/discRSS/internal/response"
+	"github.com/mowemcfc/discRSS/models"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -18,12 +18,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-
 type AddFeedParams struct {
 	Title string
 	URL   string
 }
-
 
 func (app *App) AddFeedHandler(c *gin.Context) {
 	appG := response.Gin{C: c}
@@ -32,16 +30,16 @@ func (app *App) AddFeedHandler(c *gin.Context) {
 
 	if err := appG.C.BindJSON(&addFeedParams); err != nil {
 		log.Println("error binding addFeed params JSON to addFeedParams struct", err)
-    appG.Response(http.StatusBadRequest, interface{}(nil))
+		appG.Response(http.StatusBadRequest, interface{}(nil))
 		return
 	}
 
-  _, err := url.ParseRequestURI(addFeedParams.URL)
-  if err != nil {
-    log.Printf("error parsing AddFeedHandler request URL %s: %s ", addFeedParams.URL, err)
-    appG.Response(http.StatusBadRequest, interface{}(nil))
-    return
-  }
+	_, err := url.ParseRequestURI(addFeedParams.URL)
+	if err != nil {
+		log.Printf("error parsing AddFeedHandler request URL %s: %s ", addFeedParams.URL, err)
+		appG.Response(http.StatusBadRequest, interface{}(nil))
+		return
+	}
 
 	requestUserID, err := strconv.Atoi(appG.C.Param("userId"))
 	if err != nil {
@@ -49,14 +47,13 @@ func (app *App) AddFeedHandler(c *gin.Context) {
 		return
 	}
 
-  if requestUserID < 0 {
-    log.Printf("error: request userId was less than 0: %d", requestUserID)
-    appG.Response(http.StatusBadRequest, interface{}(nil))
-    return
-  }
+	if requestUserID < 0 {
+		log.Printf("error: request userId was less than 0: %d", requestUserID)
+		appG.Response(http.StatusBadRequest, interface{}(nil))
+		return
+	}
 
-
-  newFeedId := strconv.FormatInt(time.Now().UnixNano()/(1<<22), 10)
+	newFeedId := strconv.FormatInt(time.Now().UnixNano()/(1<<22), 10)
 	newFeed := models.Feed{
 		FeedID:     newFeedId,
 		Title:      addFeedParams.Title,
@@ -67,7 +64,7 @@ func (app *App) AddFeedHandler(c *gin.Context) {
 	marshalledFeed, err := dynamodbattribute.Marshal(newFeed)
 	if err != nil {
 		log.Println("error marshalling feed struct into dynamodbattribute map", err)
-    appG.Response(http.StatusInternalServerError, interface{}(nil))
+		appG.Response(http.StatusInternalServerError, interface{}(nil))
 		return
 	}
 
@@ -93,17 +90,17 @@ func (app *App) AddFeedHandler(c *gin.Context) {
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
 			case dynamodb.ErrCodeProvisionedThroughputExceededException:
-        log.Printf("error adding feed for user %d: %s %s", requestUserID, dynamodb.ErrCodeProvisionedThroughputExceededException, aerr.Error())
-        appG.Response(http.StatusInternalServerError, interface{}(nil))
+				log.Printf("error adding feed for user %d: %s %s", requestUserID, dynamodb.ErrCodeProvisionedThroughputExceededException, aerr.Error())
+				appG.Response(http.StatusInternalServerError, interface{}(nil))
 			case dynamodb.ErrCodeResourceNotFoundException:
-        log.Printf("error adding feed for user %d: %s %s", requestUserID, dynamodb.ErrCodeResourceNotFoundException, aerr.Error())
-        appG.Response(http.StatusNotFound, interface{}(nil))
+				log.Printf("error adding feed for user %d: %s %s", requestUserID, dynamodb.ErrCodeResourceNotFoundException, aerr.Error())
+				appG.Response(http.StatusNotFound, interface{}(nil))
 			case dynamodb.ErrCodeRequestLimitExceeded:
 				log.Printf("error adding feed for user %d: %s %s", requestUserID, dynamodb.ErrCodeRequestLimitExceeded, aerr.Error())
-        appG.Response(http.StatusInternalServerError, interface{}(nil))
+				appG.Response(http.StatusInternalServerError, interface{}(nil))
 			case dynamodb.ErrCodeInternalServerError:
 				log.Printf("error adding feed for user %d: %s %s", requestUserID, dynamodb.ErrCodeInternalServerError, aerr.Error())
-        appG.Response(http.StatusInternalServerError, interface{}(nil))
+				appG.Response(http.StatusInternalServerError, interface{}(nil))
 			default:
 				log.Printf("error adding feed for user %d: %s", requestUserID, aerr.Error())
 			}
@@ -122,28 +119,28 @@ func (app *App) GetFeedHandler(c *gin.Context) {
 	requestUserID, err := strconv.Atoi(appG.C.Param("userId"))
 	if err != nil {
 		log.Println(err)
-    appG.Response(http.StatusBadRequest, interface{}(nil))
+		appG.Response(http.StatusBadRequest, interface{}(nil))
 		return
 	}
 
-  if requestUserID < 0 {
-    log.Println("error: userId value was less than 0")
-    appG.Response(http.StatusBadRequest, interface{}(nil))
-    return
-  }
+	if requestUserID < 0 {
+		log.Println("error: userId value was less than 0")
+		appG.Response(http.StatusBadRequest, interface{}(nil))
+		return
+	}
 
 	requestFeedId, err := strconv.Atoi(appG.C.Param("feedId"))
 	if err != nil {
 		log.Println(err)
-    appG.Response(http.StatusBadRequest, interface{}(nil))
+		appG.Response(http.StatusBadRequest, interface{}(nil))
 		return
 	}
 
-  if requestFeedId < 0 {
-    log.Println("error: feedId value was less than 0")
-    appG.Response(http.StatusBadRequest, interface{}(nil))
-    return
-  }
+	if requestFeedId < 0 {
+		log.Println("error: feedId value was less than 0")
+		appG.Response(http.StatusBadRequest, interface{}(nil))
+		return
+	}
 
 	user, err := app.FetchUser(requestUserID)
 	if err != nil {
@@ -151,11 +148,11 @@ func (app *App) GetFeedHandler(c *gin.Context) {
 		return
 	}
 
-  feed, found := user.FeedList[strconv.Itoa(requestFeedId)]
-  if (!found) {
-    appG.Response(http.StatusNotFound, "Unable to find feed")
-    return
-  }
+	feed, found := user.FeedList[strconv.Itoa(requestFeedId)]
+	if !found {
+		appG.Response(http.StatusNotFound, "Unable to find feed")
+		return
+	}
 
 	appG.Response(http.StatusOK, feed)
 }
@@ -190,4 +187,3 @@ func (app *App) DeleteFeedHandler(c *gin.Context) {
 
 	appG.Response(http.StatusNoContent, interface{}(nil))
 }
-
