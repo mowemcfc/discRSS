@@ -2,19 +2,22 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 	"net/http"
-  "os"
-  "fmt"
+	"os"
 
 	"github.com/mowemcfc/discRSS/internal/response"
 	"github.com/mowemcfc/discRSS/internal/sessions"
+	user "github.com/mowemcfc/discRSS/internal/user/http"
+	userDynamoDbRepo "github.com/mowemcfc/discRSS/internal/user/repository/dynamodb"
+	"github.com/mowemcfc/discRSS/internal/user/usecase"
 	"github.com/mowemcfc/discRSS/models"
 
-	"github.com/aws/aws-sdk-go/service/dynamodb"
-  "github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/aws/aws-lambda-go/events"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
+	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	ginLambdaAdapter "github.com/awslabs/aws-lambda-go-api-proxy/gin"
 	"github.com/gin-gonic/gin"
 )
@@ -26,6 +29,7 @@ type App struct {
   DdbSvc dynamodbiface.DynamoDBAPI
   SecretsManagerSvc *secretsmanager.SecretsManager
   AppConfig *models.AppConfig
+  UserHandler user.UserHandler
   IsLocal bool
 }
 
@@ -42,6 +46,9 @@ func NewApp() (*App, error) {
   app.AwsSession = awsSession
 	app.DdbSvc = dynamodb.New(app.AwsSession)
 	app.SecretsManagerSvc = secretsmanager.New(app.AwsSession)
+  userRepo := userDynamoDbRepo.NewDynamoDBUserRepository(app.DdbSvc)
+  userUsecase := usecase.NewUserUsecase(userRepo)
+  app.UserHandler = user.NewUserHandler(app.Engine, userUsecase)
 
   return app, nil
 }

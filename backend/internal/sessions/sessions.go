@@ -2,33 +2,33 @@ package sessions
 
 import (
 	"fmt"
-	"os"
-  "log"
+	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/sts"
 	"github.com/bwmarrin/discordgo"
 )
 
 func GetAWSSession(isLocal bool) (*session.Session, error) {
-	var sess *session.Session
-	var err error
-	if isLocal {
-		sess, err = session.NewSessionWithOptions(session.Options{
-			Config:  aws.Config{Region: aws.String(os.Getenv("AWS_LOCAL_REGION"))},
-			Profile: os.Getenv("AWS_LOCAL_NAMED_PROFILE"),
-		})
-	} else {
-		sess, err = session.NewSession()
-	}
-
-	if err != nil {
-		return nil, fmt.Errorf("error creating AWS session: \n%s", err)
-	}
+  sess := session.Must(session.NewSession())
+  if err := validateAWSSession(sess); err != nil {
+    panic(err)
+  }
 
 	log.Println("Opened AWS session")
 
 	return sess, nil
+}
+
+// Check if the given AWS Session's credentials are invalid or expired
+func validateAWSSession(session *session.Session) error {
+  stsSvc := sts.New(session)
+  input := &sts.GetCallerIdentityInput{}
+  _, err := stsSvc.GetCallerIdentity(input)
+  if err != nil {
+    return err
+  }
+  return nil
 }
 
 func GetDiscordSession(token string) (*discordgo.Session, error) {

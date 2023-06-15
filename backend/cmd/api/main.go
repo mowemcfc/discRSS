@@ -4,16 +4,12 @@ import (
 	"log"
 	"os"
 
-	"github.com/mowemcfc/discRSS/internal/auth0"
 	"github.com/mowemcfc/discRSS/internal/handlers"
 
 	"github.com/aws/aws-lambda-go/lambda"
 	ginLambdaAdapter "github.com/awslabs/aws-lambda-go-api-proxy/gin"
 
 	"github.com/gin-contrib/cors"
-	"github.com/gin-gonic/gin"
-	adapter "github.com/gwatts/gin-adapter"
-
 	"github.com/joho/godotenv"
 )
 
@@ -29,13 +25,6 @@ func main() {
     log.Fatal("Error instantiating app object", err)
   }
 
-	var jwtMiddleware gin.HandlerFunc
-	if app.IsLocal {
-		jwtMiddleware = func(c *gin.Context) {}
-	} else {
-		jwtMiddleware = adapter.Wrap(auth0.EnsureValidToken())
-	}
-
 	log.Println("Configuring API methods")
 	app.Engine.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:9001", "http://localhost:3000"},
@@ -43,18 +32,6 @@ func main() {
 		AllowHeaders:     []string{"*", "Authorization"},
 		AllowCredentials: true,
 	}))
-	app.Engine.GET("/hello", app.HelloWorldHandler)
-
-	userRoute := app.Engine.Group("/user")
-	{
-		userRoute.GET("/:userId", jwtMiddleware, app.GetUserHandler)
-		userRoute.POST("/:userId", jwtMiddleware, app.AddUserHandler)
-		userRoute.DELETE("/:userId", jwtMiddleware, app.DeleteUserHandler)
-
-		userRoute.GET("/:userId/feed/:feedId", jwtMiddleware, app.GetFeedHandler)
-		userRoute.POST("/:userId/feed", jwtMiddleware, app.AddFeedHandler)
-		userRoute.DELETE("/:userId/feed/:feedId", jwtMiddleware, app.DeleteFeedHandler)
-	}
 
 	if app.IsLocal {
 		log.Println("Inside LOCAL environment, using default router")
