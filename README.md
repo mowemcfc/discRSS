@@ -16,34 +16,20 @@ make deploy
 
 ### Priority
 
-- [x] add feed button
-  - [x] ui component
-  - [x] onSubmit handler
-    - [x] local data
-    - [x] post request to API route
-  - [x] backend handler
-  - [ ] error checks/responses from handler
-- [x] remove feed button
-  - [x] ui component
-  - [x] onsubmit handler
-    - [x] post request to API route
-    - [x] set local state
-  - [x] backend handler
-- [ ] remove timestamp from frontend
-- [ ] fix deploy to accomodate new folder structure
-- [x] change User.FeedList from DDB array to Map
-- [x] use discord oauth instead of google
-  - [x] enable discord auth
-  - [x] disable google auth
+- [ ] errors package & error propagation
 - [ ] tests 
  - [x] make code testable by using DI
  - [ ] implement tests
   - [ ] user
-  - [ ] feed
-- [ ] create user upon login
+    - [ ] http
+    - [ ] usecase
+    - [ ] repo
 
 ### Backlog 
 
+- [ ] remove timestamp from frontend
+- [ ] fix deploy to accomodate new folder structure
+- [ ] create user upon login
 - [ ] validate submitted feed are indeed valid RSS
 - [ ] tracing
 - [ ] make as much of lambda async as possible
@@ -100,3 +86,20 @@ make deploy
 - [x] introduce more granular routes to API handlers e.g. user -> user/feed, user/channel
 - [x] scope react props at more appropriate levels e.g. add FeedList component and pass in user feeds
 - [x] simplify timestamp parsing by removing format-specific logic, see time.Parse(layout, str)
+- [x] add feed button
+  - [x] ui component
+  - [x] onSubmit handler
+    - [x] local data
+    - [x] post request to API route
+  - [x] backend handler
+  - [ ] error checks/responses from handler
+- [x] remove feed button
+  - [x] ui component
+  - [x] onsubmit handler
+    - [x] post request to API route
+    - [x] set local state
+  - [x] backend handler
+- [x] change User.FeedList from DDB array to Map
+- [x] use discord oauth instead of google
+  - [x] enable discord auth
+  - [x] disable google auth
