@@ -39,6 +39,7 @@ func (handler *UserHandler) GetUser(c *gin.Context) {
   if err != nil {
     code := getStatusCode(err)
     appG.Response(code, err)
+    return
   }
 
 	appG.Response(http.StatusOK, user)
