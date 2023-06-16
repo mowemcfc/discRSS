@@ -3,9 +3,9 @@ package models
 import "errors"
 
 var (
-  ErrInternalServerError = errors.New("Internal Server Error")
+  ErrInternalServerError = errors.New("internal server error")
   ErrNotFound = errors.New("requested item could not be found")
 	ErrConflict = errors.New("item already exists")
-	ErrBadParamInput = errors.New("given param is not valid")
+	ErrBadInput = errors.New("given input is not valid")
   ErrNotPermitted = errors.New("not permitted to perform given action")
 )
