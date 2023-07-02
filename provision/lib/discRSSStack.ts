@@ -85,10 +85,10 @@ export class DiscRssStack extends Stack {
     })
 
     const userTable = new dynamodb.Table(this, 'DiscRSS-UserTable', {
-      tableName: 'discRSS-UserRecords',
+      tableName: 'discRSS-UserRecords1',
       partitionKey: {
         name: 'userId',
-        type: dynamodb.AttributeType.NUMBER
+        type: dynamodb.AttributeType.STRING
       }
     })
     userTable.applyRemovalPolicy(RemovalPolicy.DESTROY)
@@ -124,8 +124,8 @@ export class DiscRssStack extends Stack {
     appConfigTable.grantReadWriteData(apiLambda.role!.grantPrincipal)
 
     // Use for debugging, if you want to test your feed update over a longer period
-    const currentTime = "2022-10-20T15:04:05Z"
-    //const currentTime = new Date().toISOString()
+    //const currentTime = "2022-10-20T15:04:05Z"
+    const currentTime = new Date().toISOString()
     const appConfigTableInitAction: cr.AwsSdkCall = {
       service: 'DynamoDB',
       action: 'putItem',

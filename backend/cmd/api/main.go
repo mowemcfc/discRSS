@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	ginLambdaAdapter "github.com/awslabs/aws-lambda-go-api-proxy/gin"
 
-	"github.com/gin-contrib/cors"
 	"github.com/joho/godotenv"
 )
 
@@ -24,14 +23,6 @@ func main() {
   if err != nil {
     log.Fatal("Error instantiating app object", err)
   }
-
-	log.Println("Configuring API methods")
-	app.Engine.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:9001", "http://localhost:3000"},
-		AllowMethods:     []string{"POST", "PATCH", "PUT", "DELETE", "GET", "OPTIONS"},
-		AllowHeaders:     []string{"*", "Authorization"},
-		AllowCredentials: true,
-	}))
 
 	if app.IsLocal {
 		log.Println("Inside LOCAL environment, using default router")

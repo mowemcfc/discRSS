@@ -1,5 +1,5 @@
 deploy:
-	cdk deploy --profile carter-dev
+	cdk deploy 
 
 destroy:
-	cdk destroy --profile carter-dev
+	cdk destroy

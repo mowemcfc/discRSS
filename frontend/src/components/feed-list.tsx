@@ -57,7 +57,7 @@ export const FeedList: React.FC<FeedListProps> = ({ userId, feedList }): JSX.Ele
       .then(handleErrors)
 
     setFeedListState(
-      feedListState.filter(feed => feed.feedId != feedId)
+      feedListState.filter(feed => feed.feedId !== feedId)
     )
   }
 

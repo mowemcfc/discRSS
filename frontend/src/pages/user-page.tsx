@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { UserProfile } from "../components/profile";
 import { Navigate } from "react-router-dom";
+import { Feed } from '../types/user'
 import { FeedList } from "../components/feed-list";
 import { SiteBanner } from '../components/site-banner'
 import { handleErrors } from "../utils";
@@ -15,12 +16,12 @@ export const UserPage: React.FC = () => {
   } = useAuth0();
 
 
-  const [userData, setUser] = useState<UserAccount>({ userId: -1, username: '', feedList: {}, channelList: {} })
+  const [userFeedList, setUserFeedList] = useState<Feed[]>([])
   const [isFirstLogin, setIsFirstLogin] = useState<boolean | null>(null);
 
   const fetchUser = async (id: number) => {
     const accessToken = await getAccessTokenSilently()
-    const resp = await fetch(`${process.env.REACT_APP_APIGW_ENDPOINT!}user/${id}`, {
+    const resp = await fetch(`${process.env.REACT_APP_APIGW_ENDPOINT!}user/${id}/feeds`, {
       headers: {
         authorization: `Bearer ${accessToken}`
       },
@@ -28,21 +29,21 @@ export const UserPage: React.FC = () => {
       .then(handleErrors)
       .then(res => res.json())
       .then(data => data.Body)
-    setUser(resp)
+    setUserFeedList(resp)
   }
 
   const checkFirstLogin = async () => {
     if(isAuthenticated) {
       const claims = await getIdTokenClaims()
       console.log(claims)
-      setIsFirstLogin(false)
+      setIsFirstLogin(false) // TODO: properly check this
     }
   }
 
 
   useEffect(() => {
     checkFirstLogin()
-    fetchUser(2) // TODO: get this value dynamically from auth0 ID
+    fetchUser(10) // TODO: get this value dynamically from auth0 ID
   }, [])
 
   if(!isAuthenticated) {
@@ -53,7 +54,7 @@ export const UserPage: React.FC = () => {
     return <Navigate replace to="/register"/>
   }
 
-  if (!userData) {
+  if (!userFeedList) {
     return (
       <div>
         <div>Loading your user account ...</div>
@@ -68,7 +69,7 @@ export const UserPage: React.FC = () => {
         <SiteBanner />
       </div>
       <div className="bg-slate-200 px-4 py-32 h-full min-h-screen">
-        <FeedList feedList={Object.values(userData.feedList)} userId={userData.userId}/>
+        <FeedList feedList={Object.values(userFeedList)} userId={10}/>
       </div>
     </div>
   )
