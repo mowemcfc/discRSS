@@ -3,8 +3,9 @@ import { LoginButton } from "./login";
 
 export const SiteBanner = () => {
   return (
-    <div>
-      Site Banner Here!
+    <div className="bg-blue-950">
+      Site Banner Here! 123
     </div>
   );
 };
+// 11827

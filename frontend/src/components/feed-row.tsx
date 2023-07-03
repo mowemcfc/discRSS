@@ -19,12 +19,12 @@ export const FeedRow = ({feedNumber, feed, removalHandler}: FeedRowProps) => {
 
   return (
       <tr>
-        <td  className="w-1/12 px-6 py-4 text-sm font-medium text-gray-800 whitespace-nowrap">{feedNumber}</td>
-        <td  className="w-3/12 px-6 py-4 text-sm font-medium text-gray-800 whitespace-nowrap">{feed.title}</td>
-        <td  className="w-3/12 px-6 py-4 text-sm font-medium text-gray-800 whitespace-nowrap">{feed.url}</td>
-        <td  className="w-2/12 px-6 py-4 text-sm font-medium text-gray-800 whitespace-nowrap">{feed.timeFormat}</td>
-        <td  className="w-1/12 px-6 py-4 text-sm font-medium text-gray-800 whitespace-nowrap">
-          <input type="image" onClick={removeFeedHandler} src={RemoveIcon} width="25vw" height="25vw"/>
+        <td  className="w-1/12 px-6 py-4">{feedNumber}</td>
+        <td  className="w-3/12 px-6 py-4">{feed.title}</td>
+        <td  className="w-3/12 px-6 py-4">{feed.url}</td>
+        <td  className="w-2/12 px-6 py-4">{feed.timeFormat}</td>
+        <td  className="w-1/12 px-6 py-4">
+          <input type="image" alt="Remove feed" onClick={removeFeedHandler} src={RemoveIcon} width="25vw" height="25vw"/>
         </td>
       </tr>
   );

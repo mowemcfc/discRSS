@@ -62,43 +62,43 @@ export const FeedList: React.FC<FeedListProps> = ({ userId, feedList }): JSX.Ele
   }
 
   return (
-    <div className="overflow-hidden grid place-items-center border rounded-lg">
-          <table className="divide-y divide-gray-200">
-            <thead>
+    <div className="overflow-hidden grid place-items-center rounded-lg">
+          <table>
+            <thead className="text-gray-100 uppercase font-bold text-xs text-left">
               <tr>
                 <td
-                  className="py-3 text-xs font-bold text-left text-gray-500 uppercase"
+                  className="py-3"
                 >
                   Feed #
                 </td>
                 <td
-                  className="px-6 py-3 text-xs font-bold text-left text-gray-500 uppercase"
+                  className="px-6 py-3"
                 >
                   Feed Name
                 </td>
                 <td
-                  className="w-24 px-6 py-3 text-xs font-bold text-left text-gray-500 uppercase"
+                  className="w-24 px-6 py-3"
                 >
                   Feed URL
                 </td>
                 <td
-                  className="w-3 px-6 py-3 text-xs font-bold text-left text-gray-500 uppercase"
+                  className="w-3 px-6 py-3"
                 >
                   Feed Timestamp
                 </td>
                 <td
-                  className="py-3 text-xs font-bold text-left text-gray-500 uppercase"
+                  className="py-3 text-xs"
                 >
                   &nbsp;
                 </td>
                 <td
-                  className="py-3 text-xs font-bold text-left text-gray-500 uppercase"
+                  className="py-3 text-xs"
                 >
                   &nbsp;
                 </td>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="text-gray-300 font-medium whitespace-nowrap">
                 {feedListState.map((feed: Feed) => {
                   return <FeedRow 
                     key={feedListState.indexOf(feed)}

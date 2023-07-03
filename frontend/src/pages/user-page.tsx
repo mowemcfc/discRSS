@@ -64,11 +64,10 @@ export const UserPage: React.FC = () => {
 
   return (
     <div>
-      <UserProfile/>
-      <div className="flex-initial justify-center px-2 py-3 bg-blue-300"> 
+      <div className="flex-initial justify-center"> 
         <SiteBanner />
       </div>
-      <div className="bg-slate-200 px-4 py-32 h-full min-h-screen">
+      <div className="bg-gray-900 px-4 py-32 h-full min-h-screen">
         <FeedList feedList={Object.values(userFeedList)} userId={10}/>
       </div>
     </div>
