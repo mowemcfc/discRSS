@@ -14,7 +14,7 @@ export const UserProfile = () => {
 
   return (
     <div className="basis-1/4 flex place-content-end text-white px-10">
-      <div className="">
+      <div className="px-5">
         <h2>{user?.name}</h2>
         <LogoutButton />
       </div>
