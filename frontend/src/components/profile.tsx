@@ -13,11 +13,12 @@ export const UserProfile = () => {
   }
 
   return (
-    <div>
+    <div className="basis-1/4 flex place-content-end text-white px-10">
+      <div className="">
+        <h2>{user?.name}</h2>
+        <LogoutButton />
+      </div>
       <img src={user?.picture} alt={user?.name} />
-      <h2>{user?.name}</h2>
-      <h2>{user?.email}</h2>
-      <LogoutButton />
     </div>
   );
 };
