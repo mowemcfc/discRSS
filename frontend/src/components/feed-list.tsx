@@ -1,9 +1,8 @@
-import { UserAccount, Feed, DiscordChannel, NewFeedParams } from '../types/user'
+import { Feed, NewFeedParams } from '../types/user'
 import { FeedRow, NewFeedRow } from './feed-row'
 import React, { useState, useEffect } from 'react'
 import { useAuth0 } from "@auth0/auth0-react";
 import { handleErrors } from '../utils';
-import { arrayBuffer } from 'stream/consumers';
 
 
 interface FeedListProps {
@@ -47,7 +46,7 @@ export const FeedList: React.FC<FeedListProps> = ({ userId, feedList }): JSX.Ele
   const removeFeedHandler = async (feedId: number) => {
 
     const accessToken = await getAccessTokenSilently()
-    const resp = await fetch(
+    await fetch(
       `${process.env.REACT_APP_APIGW_ENDPOINT!}user/${userId.toString()}/feed/${feedId.toString()}`, {
       method: 'DELETE',
       headers: {
@@ -55,6 +54,7 @@ export const FeedList: React.FC<FeedListProps> = ({ userId, feedList }): JSX.Ele
       },
     })
       .then(handleErrors)
+
 
     setFeedListState(
       feedListState.filter(feed => feed.feedId !== feedId)

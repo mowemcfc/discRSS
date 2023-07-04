@@ -1,4 +1,3 @@
-import { ReactionForComment } from "aws-sdk/clients/codecommit";
 import React, { useEffect, useState } from "react";
 import PlusIcon from '../static/image/plus.png'
 import RemoveIcon from '../static/image/remove.png'
@@ -78,7 +77,7 @@ export const NewFeedRow = ({addNewFeedStateHandler}: NewFeedRowProps) => {
           <td
             className="w-1/12 px-6 py-4 justify-start"
           >
-            <input type="image" onClick={newFeedSubmitHandler} src={PlusIcon} width="20vw" height="20vw"/>
+            <input type="image" alt="Add feed" onClick={newFeedSubmitHandler} src={PlusIcon} width="20vw" height="20vw"/>
           </td>
       </tr>
   )
