@@ -18,7 +18,7 @@ export const UserProfile = () => {
         <h2>{user?.name}</h2>
         <LogoutButton />
       </div>
-      <img src={user?.picture} alt={user?.name} />
+      <img className="w-16 h-16" src={user?.picture} alt={user?.name} />
     </div>
   );
 };
