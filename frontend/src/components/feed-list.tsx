@@ -62,7 +62,7 @@ export const FeedList: React.FC<FeedListProps> = ({ userId, feedList }): JSX.Ele
   }
 
   return (
-    <div className="overflow-hidden grid place-items-center rounded-lg">
+    <div className="overflow-hidden place-items-center rounded-lg">
           <table>
             <thead className="text-gray-100 uppercase font-bold text-xs text-left">
               <tr>
