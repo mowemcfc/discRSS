@@ -16,8 +16,6 @@ make deploy
 
 ### Priority
 
-- [x] fix addFeed
-- [ ] fix removeFeed
 - [ ] tests 
  - [x] make code testable by using DI
  - [ ] implement tests
@@ -105,3 +103,5 @@ make deploy
   - [x] enable discord auth
   - [x] disable google auth
 - [x] errors package & error propagation
+- [x] fix addFeed
+- [x] fix removeFeed
