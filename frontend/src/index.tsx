@@ -16,9 +16,7 @@ root.render(
     audience={process.env.REACT_APP_AUTH0_AUDIENCE!}
     redirectUri='http://localhost:3000/account'
   >
-    <React.StrictMode>
       <App />
-    </React.StrictMode>
   </Auth0Provider>
 );
 

@@ -16,18 +16,23 @@ export const UserPage: React.FC = () => {
 
 
   const [userFeedList, setUserFeedList] = useState<Feed[]>([])
-  const [isFirstLogin, setIsFirstLogin] = useState<boolean | null>(null)
   const [userId, setUserId] = useState<number>(0)
+  const [isFetching, setIsFetching] = useState<boolean>(true)
 
-  const getUser = async (id: number): Promise<UserAccount> => {
+  const getUser = async (id: number): Promise<UserAccount | null> => {
     const accessToken = await getAccessTokenSilently()
     const user = await fetch(`${process.env.REACT_APP_APIGW_ENDPOINT!}user/${id}`, {
       headers: {
-        authorization: `Bearer ${accessToken}`
+        authorization: `Bearer ${accessToken}` 
       },
     })
       .then(res => res.json())
       .then(data => data.Body as UserAccount)
+    
+    // An empty userId indicates that the user does not exist, so we return null
+    if (!user.userId)
+      return null
+
     return user
   }
 
@@ -50,39 +55,34 @@ export const UserPage: React.FC = () => {
   }
 
   const getOrCreateUser = async(id: number): Promise<UserAccount> => {
-    var user: UserAccount 
-    user = await getUser(id)
-    const isEmpty = Object.values(user).every(x => x === null || x === '');
-    return isEmpty ? createUser(id) : user
+    const user = await getUser(id)
+    return user ?? createUser(id)
   }
 
-  const checkFirstLogin = async () => {
-    if(isAuthenticated) {
+  const setUserData = async () => {
       const claims = await getIdTokenClaims()
       // Auth0 JWT sub is in format oauth2|<provider>|<id>.
       // We will only ever use a single oauth provider, so the ID is solely unique.
       const id = claims!["sub"].split('|')[2]
       const user = await getOrCreateUser(id)
-      setUserId(id)
       setUserFeedList(Object.values(user.feedList))
-    }
+      setUserId(id)
+      setIsFetching(false)
   }
 
 
   useEffect(() => {
-    checkFirstLogin()
-    getUser(userId) // TODO: get this value dynamically from auth0 ID
+    if(isFetching) {
+      setUserData()
+    }
   }, [])
+
 
   if(!isAuthenticated) {
     return <Navigate replace to="/login" />
   }
 
-  if(isFirstLogin) {
-    return <Navigate replace to="/register"/>
-  }
-
-  if (!userFeedList) {
+  if (isFetching) {
     return (
       <div>
         <div>Loading your user account ...</div>

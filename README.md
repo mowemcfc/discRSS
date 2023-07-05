@@ -16,11 +16,10 @@ make deploy
 
 ### Priority
 
-- [ ] hook oauth flow to create user with uuid in DDB
+- [ ] remove timestamp from frontend
 
 ### Backlog 
 
-- [ ] remove timestamp from frontend
 - [ ] validate submitted feed are indeed valid RSS
  - [x] valid url 
  - [ ] valid rss
@@ -107,4 +106,6 @@ make deploy
 - [x] errors package & error propagation
 - [x] fix addFeed
 - [x] fix removeFeed
+- [x] hook oauth flow to create user with uuid in DDB
+ - [x] sort out correct error codes
 
