@@ -82,11 +82,6 @@ export const FeedList: React.FC<FeedListProps> = ({ userId, feedList }): JSX.Ele
                   Feed URL
                 </td>
                 <td
-                  className="w-3 px-6 py-3"
-                >
-                  Feed Timestamp
-                </td>
-                <td
                   className="py-3 text-xs"
                 >
                   &nbsp;
