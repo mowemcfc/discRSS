@@ -16,20 +16,14 @@ make deploy
 
 ### Priority
 
-- [ ] tests 
- - [x] make code testable by using DI
- - [ ] implement tests
-  - [ ] user
-    - [ ] http
-    - [ ] usecase
-    - [ ] repo
+- [ ] hook oauth flow to create user with uuid in DDB
 
 ### Backlog 
 
 - [ ] remove timestamp from frontend
-- [ ] fix deploy to accomodate new folder structure
-- [ ] create user upon login
 - [ ] validate submitted feed are indeed valid RSS
+ - [x] valid url 
+ - [ ] valid rss
 - [ ] tracing
 - [ ] make as much of lambda async as possible
 - [ ] logging
@@ -40,9 +34,17 @@ make deploy
   - [x] basic
   - [ ] allow proper scopes, createUser, getFeed
   - [ ] prevent IDOR by comparing userID's against JWT `sub`
+- [ ] tests 
+ - [x] make code testable by using DI
+ - [ ] implement tests
+  - [ ] user
+    - [ ] http
+    - [ ] usecase
+    - [ ] repo
 
 ### Completed
 
+- [x] fix deploy to accomodate new folder structure
 - [x] cdk stack to host app on lambda
   - [x] DDB tables
   - [x] lambda
@@ -105,3 +107,4 @@ make deploy
 - [x] errors package & error propagation
 - [x] fix addFeed
 - [x] fix removeFeed
+
