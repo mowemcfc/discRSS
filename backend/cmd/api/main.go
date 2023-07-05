@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/mowemcfc/discRSS/internal/handlers"
+	"github.com/mowemcfc/discRSS/internal/app"
 
 	"github.com/aws/aws-lambda-go/lambda"
 	ginLambdaAdapter "github.com/awslabs/aws-lambda-go-api-proxy/gin"
@@ -19,7 +19,7 @@ func main() {
 		os.Exit(1)
 	}
 
-  app, err := handlers.NewApp()
+  app, err := app.NewApp()
   if err != nil {
     log.Fatal("Error instantiating app object", err)
   }

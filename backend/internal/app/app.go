@@ -1,4 +1,4 @@
-package handlers
+package app
 
 import (
 	"context"
@@ -63,7 +63,6 @@ func (app *App) NotFoundHandler(c *gin.Context) {
 	appG := response.Gin{C: c}
 	appG.Response(http.StatusNotFound, "Resource not found.")
 }
-
 
 func (app *App) LambdaHandler(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	return app.GinLambda.ProxyWithContext(ctx, request)
