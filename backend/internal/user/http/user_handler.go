@@ -61,7 +61,7 @@ func NewUserHandler(g *gin.Engine, usecase usecase.UserUsecase) UserHandler {
 
 func (handler *UserHandler) GetUser(c *gin.Context) {
 	appG := response.Gin{C: c}
-  userId := c.Query("userId")
+  userId := appG.C.Param("userId")
   res, err := handler.userUsecase.GetUser(c, userId)
   if err != nil {
     code := getStatusCode(err)
