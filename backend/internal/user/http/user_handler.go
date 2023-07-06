@@ -1,17 +1,18 @@
 package user
 
 import (
-  "strconv"
-  "net/http"
-  "net/url"
-  "time"
-	"github.com/sirupsen/logrus"
-	"github.com/gin-gonic/gin"
-  "github.com/gin-contrib/cors"
+	"net/http"
+	"net/url"
+	"strconv"
+	"time"
 
-  "github.com/mowemcfc/discRSS/models"
-  "github.com/mowemcfc/discRSS/internal/user/usecase"
-  "github.com/mowemcfc/discRSS/internal/response"
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
+
+	"github.com/mowemcfc/discRSS/internal/response"
+	"github.com/mowemcfc/discRSS/internal/user/usecase"
+	"github.com/mowemcfc/discRSS/models"
 )
 
 type UserHandler struct {

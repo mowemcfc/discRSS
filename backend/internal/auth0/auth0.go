@@ -2,15 +2,19 @@ package auth0
 
 import (
 	"context"
+	"errors"
 	"log"
 	"net/http"
 	"net/url"
 	"os"
 	"time"
 
+	"github.com/mowemcfc/discRSS/internal/response"
+
 	jwtmiddleware "github.com/auth0/go-jwt-middleware/v2"
 	"github.com/auth0/go-jwt-middleware/v2/jwks"
 	"github.com/auth0/go-jwt-middleware/v2/validator"
+	"github.com/gin-gonic/gin"
 )
 
 type CustomClaims struct {
@@ -19,6 +23,14 @@ type CustomClaims struct {
 
 func (c CustomClaims) Validate(ctx context.Context) error {
 	return nil
+}
+
+
+func ValidateJWT(c * gin.Context) {
+    appG := response.Gin{C: c}
+    appG.Response(http.StatusUnauthorized, "Unauthed")
+    c.AbortWithError(http.StatusUnauthorized, errors.New("Unauthorized"))
+    return
 }
 
 // EnsureValidToken is a middleware that will check the validity of our JWT.
