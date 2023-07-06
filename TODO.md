@@ -2,21 +2,19 @@
 
 ## Priority
 
+- [ ] lambda JWT auth
+  - [ ] basic
+  - [ ] allow proper scopes, createUser, getFeed
+  - [ ] prevent IDOR by comparing userID's against JWT `sub`
+
 ## Backlog 
 
-- [ ] validate submitted feed are indeed valid RSS
- - [x] valid url 
- - [ ] valid rss
 - [ ] tracing
 - [ ] make as much of lambda async as possible
 - [ ] logging
   - [x] basic
   - [ ] structured
 - [ ] consolidate .env files and other assorted local txt's
-- [ ] lambda JWT auth
-  - [x] basic
-  - [ ] allow proper scopes, createUser, getFeed
-  - [ ] prevent IDOR by comparing userID's against JWT `sub`
 - [ ] tests 
  - [x] make code testable by using DI
  - [ ] implement tests
@@ -24,6 +22,9 @@
     - [ ] http
     - [ ] usecase
     - [ ] repo
+- [ ] validate submitted feed are indeed valid RSS
+ - [x] valid url 
+ - [ ] valid rss
 
 ## Completed
 
