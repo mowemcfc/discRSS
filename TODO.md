@@ -3,7 +3,8 @@
 ## Priority
 
 - [ ] lambda JWT auth
-  - [ ] basic
+  - [x] boiler
+  - [x] basic
   - [ ] allow proper scopes, createUser, getFeed
   - [ ] prevent IDOR by comparing userID's against JWT `sub`
 

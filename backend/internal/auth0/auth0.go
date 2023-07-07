@@ -9,6 +9,7 @@ import (
 	"os"
 	"time"
 
+	ginadapter "github.com/gwatts/gin-adapter"
 	"github.com/mowemcfc/discRSS/internal/response"
 
 	jwtmiddleware "github.com/auth0/go-jwt-middleware/v2"
@@ -25,16 +26,8 @@ func (c CustomClaims) Validate(ctx context.Context) error {
 	return nil
 }
 
-
-func ValidateJWT(c * gin.Context) {
-    appG := response.Gin{C: c}
-    appG.Response(http.StatusUnauthorized, "Unauthed")
-    c.AbortWithError(http.StatusUnauthorized, errors.New("Unauthorized"))
-    return
-}
-
 // EnsureValidToken is a middleware that will check the validity of our JWT.
-func EnsureValidToken() func(next http.Handler) http.Handler {
+func EnsureValidToken() gin.HandlerFunc {
 	issuerURL, err := url.Parse("https://" + os.Getenv("AUTH0_DOMAIN") + "/")
 	if err != nil {
 		log.Fatalf("Failed to parse the issuer url: %v", err)
@@ -71,7 +64,9 @@ func EnsureValidToken() func(next http.Handler) http.Handler {
 		jwtmiddleware.WithErrorHandler(errorHandler),
 	)
 
-	return func(next http.Handler) http.Handler {
+  handler := func(next http.Handler) http.Handler {
 		return middleware.CheckJWT(next)
 	}
+
+	return ginadapter.Wrap(handler)
 }

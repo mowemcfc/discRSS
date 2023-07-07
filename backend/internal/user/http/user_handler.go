@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 
+	"github.com/mowemcfc/discRSS/internal/auth0"
 	"github.com/mowemcfc/discRSS/internal/response"
 	"github.com/mowemcfc/discRSS/internal/user/usecase"
 	"github.com/mowemcfc/discRSS/models"
@@ -48,6 +49,7 @@ func NewUserHandler(g *gin.Engine, usecase usecase.UserUsecase) UserHandler {
 		AllowCredentials: true,
 	}))
 
+  g.Use(auth0.EnsureValidToken())
   g.GET("/user/:userId", handler.GetUser)
   g.POST("/user", handler.CreateUser)
   g.DELETE("/user/:userId", handler.DeleteUser)
