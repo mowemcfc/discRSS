@@ -2,15 +2,14 @@ package auth0
 
 import (
 	"context"
-	"errors"
 	"log"
 	"net/http"
 	"net/url"
 	"os"
 	"time"
+  "strings"
 
 	ginadapter "github.com/gwatts/gin-adapter"
-	"github.com/mowemcfc/discRSS/internal/response"
 
 	jwtmiddleware "github.com/auth0/go-jwt-middleware/v2"
 	"github.com/auth0/go-jwt-middleware/v2/jwks"
@@ -22,8 +21,36 @@ type CustomClaims struct {
 	Scope string `json:"scope"`
 }
 
-func (c CustomClaims) Validate(ctx context.Context) error {
+func (c CustomClaims) Validate(context.Context) error {
 	return nil
+}
+
+func extractDiscordIdFromSub(sub string) string {
+  parts := strings.Split(sub, "|")
+  return parts[len(parts) - 1]
+}
+
+func EnsureValidClaims() gin.HandlerFunc {
+  return func (c *gin.Context) {
+      claims, ok := c.Request.Context().Value(jwtmiddleware.ContextKey{}).(*validator.ValidatedClaims)
+      if !ok {
+        c.AbortWithStatusJSON(
+          http.StatusInternalServerError,
+          map[string]string{"message": "Failed to get validated JWT claims."},
+        )
+      }
+
+      claimID := extractDiscordIdFromSub(claims.RegisteredClaims.Subject)
+      targetID := c.Param("userId")
+
+      if claimID != targetID {
+        c.AbortWithStatusJSON(
+          http.StatusUnauthorized,
+          map[string]string{"message": "Not permitted to access resource"},
+        )
+      }
+			return
+  }
 }
 
 // EnsureValidToken is a middleware that will check the validity of our JWT.
@@ -50,6 +77,7 @@ func EnsureValidToken() gin.HandlerFunc {
 	if err != nil {
 		log.Fatalf("Failed to set up the jwt validator")
 	}
+
 
 	errorHandler := func(w http.ResponseWriter, r *http.Request, err error) {
 		log.Printf("Encountered error while validating JWT: %v", err)

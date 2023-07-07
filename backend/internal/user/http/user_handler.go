@@ -50,6 +50,7 @@ func NewUserHandler(g *gin.Engine, usecase usecase.UserUsecase) UserHandler {
 	}))
 
   g.Use(auth0.EnsureValidToken())
+  g.Use(auth0.EnsureValidClaims())
   g.GET("/user/:userId", handler.GetUser)
   g.POST("/user", handler.CreateUser)
   g.DELETE("/user/:userId", handler.DeleteUser)

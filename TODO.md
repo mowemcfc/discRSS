@@ -6,7 +6,8 @@
   - [x] boiler
   - [x] basic
   - [ ] allow proper scopes, createUser, getFeed
-  - [ ] prevent IDOR by comparing userID's against JWT `sub`
+  - [ ] consolidate use of http writers, use correct response format (apigw)
+  - [x] prevent IDOR by comparing userID's against JWT `sub`
 
 ## Backlog 
 
