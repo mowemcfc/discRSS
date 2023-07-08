@@ -2,7 +2,7 @@
 
 ## Overview
 
-DiscRSS is a web interface for managing RSS subscriptions and notifications through Discord.It aims to provide a completely free experience for personal users. Additionally, it aims toprovide a solid point of reference for anyone looking to implement similar functionality.
+DiscRSS is a web interface for managing RSS subscriptions and notifications through Discord. It aims to provide a completely free experience for personal users. Additionally, it aims to provide a solid point of reference for anyone looking to implement similar functionality.
 
 ## Purpose
 
