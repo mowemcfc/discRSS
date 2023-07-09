@@ -2,13 +2,6 @@
 
 ## Priority
 
-- [ ] lambda JWT auth
-  - [x] boiler
-  - [x] basic
-  - [ ] allow proper scopes, createUser, getFeed
-  - [ ] consolidate use of http writers, use correct response format (apigw)
-  - [x] prevent IDOR by comparing userID's against JWT `sub`
-
 ## Backlog 
 
 - [ ] tracing
@@ -96,4 +89,10 @@
 - [x] hook oauth flow to create user with uuid in DDB
  - [x] sort out correct error codes
 - [x] remove timestamp from frontend
+- [x] lambda JWT auth
+  - [x] boiler
+  - [x] basic
+  - [x] consolidate use of http writers, use correct response format (apigw)
+  - [x] prevent IDOR by comparing userID's against JWT `sub`
+
 
