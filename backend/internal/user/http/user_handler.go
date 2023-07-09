@@ -10,6 +10,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 
+	"go.opentelemetry.io/otel"
+
 	"github.com/mowemcfc/discRSS/internal/auth0"
 	"github.com/mowemcfc/discRSS/internal/response"
 	"github.com/mowemcfc/discRSS/internal/user/usecase"
@@ -64,7 +66,13 @@ func NewUserHandler(g *gin.Engine, usecase usecase.UserUsecase) UserHandler {
 }
 
 func (handler *UserHandler) GetUser(c *gin.Context) {
+
 	appG := response.Gin{C: c}
+
+  tr := otel.Tracer("api_user")
+  _, span := tr.Start(c, "GET /user/:userId")
+  defer span.End()
+
   userId := appG.C.Param("userId")
   res, err := handler.userUsecase.GetUser(c, userId)
   if err != nil {

@@ -2,9 +2,13 @@
 
 ## Priority
 
+- [ ] tracing
+    - [x] jaeger exporter
+    - [x] spans
+    - [ ] nested spans
+
 ## Backlog 
 
-- [ ] tracing
 - [ ] make as much of lambda async as possible
 - [ ] logging
   - [x] basic

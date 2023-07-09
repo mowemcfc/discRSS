@@ -11,6 +11,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
 	"github.com/gin-gonic/gin"
+
+	"go.opentelemetry.io/otel"
 )
 
 type DynamoDBUserRepository struct {
@@ -32,6 +34,10 @@ func NewDynamoDBUserRepository (client dynamodbiface.DynamoDBAPI) UserRepository
 }
 
 func (d *DynamoDBUserRepository) GetUser(ctx *gin.Context, userId string) (*models.UserAccount, error) { 
+  tr := otel.Tracer("api_user")
+  _, span := tr.Start(ctx, "db.getUser")
+  defer span.End()
+
 	getUserInput := &dynamodb.GetItemInput{
 		Key: map[string]*dynamodb.AttributeValue{
 			"userId": {

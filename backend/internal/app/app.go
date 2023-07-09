@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/mowemcfc/discRSS/internal/config"
 	"github.com/mowemcfc/discRSS/internal/response"
 	"github.com/mowemcfc/discRSS/internal/sessions"
 	user "github.com/mowemcfc/discRSS/internal/user/http"
@@ -13,6 +14,14 @@ import (
 	"github.com/mowemcfc/discRSS/internal/user/usecase"
 	"github.com/mowemcfc/discRSS/models"
 
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/exporters/jaeger"
+	"go.opentelemetry.io/otel/sdk/resource"
+	tracesdk "go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
+
+	"github.com/sirupsen/logrus"
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
@@ -33,6 +42,27 @@ type App struct {
   IsLocal bool
 }
 
+func setupTracing() error { 
+	exp, err := jaeger.New(jaeger.WithAgentEndpoint())
+	if err != nil {
+		return err
+	}
+
+	tp := tracesdk.NewTracerProvider(
+		tracesdk.WithBatcher(exp),
+		tracesdk.WithResource(resource.NewWithAttributes(
+			semconv.SchemaURL,
+			semconv.ServiceName(config.AppName),
+			attribute.String("environment", "dev"),
+			attribute.Int64("ID", 1),
+		)),
+	)
+
+  otel.SetTracerProvider(tp)
+  logrus.Info("setup tracing w/ jaeger")
+  return nil
+}
+
 func NewApp() (*App, error) {
   app := &App{
     Engine: gin.Default(),
@@ -49,6 +79,8 @@ func NewApp() (*App, error) {
   userRepo := userDynamoDbRepo.NewDynamoDBUserRepository(app.DdbSvc)
   userUsecase := usecase.NewUserUsecase(userRepo)
   app.UserHandler = user.NewUserHandler(app.Engine, userUsecase)
+
+  setupTracing()
 
   return app, nil
 }

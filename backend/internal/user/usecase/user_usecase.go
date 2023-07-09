@@ -6,6 +6,8 @@ import (
 
 	"github.com/mowemcfc/discRSS/internal/user/repository/dynamodb"
 	"github.com/mowemcfc/discRSS/models"
+
+	"go.opentelemetry.io/otel"
 )
 
 type userUsecase struct {
@@ -27,6 +29,10 @@ func NewUserUsecase(userRepo dynamodb.UserRepository) UserUsecase {
 }
 
 func (usecase *userUsecase) GetUser(ctx *gin.Context, userId string) (*models.UserAccount, error) { 
+  tr := otel.Tracer("api_user")
+  _, span := tr.Start(ctx, "usecase.getUser")
+  defer span.End()
+
   user, err := usecase.userRepo.GetUser(ctx, userId)
   if err != nil {
     logrus.Errorf("usecase GetUser error: %s", err)
