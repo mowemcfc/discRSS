@@ -10,9 +10,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 
-	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 
 	"github.com/mowemcfc/discRSS/internal/auth0"
+	"github.com/mowemcfc/discRSS/internal/config"
 	"github.com/mowemcfc/discRSS/internal/response"
 	"github.com/mowemcfc/discRSS/internal/user/usecase"
 	"github.com/mowemcfc/discRSS/models"
@@ -53,6 +54,7 @@ func NewUserHandler(g *gin.Engine, usecase usecase.UserUsecase) UserHandler {
 
   g.Use(auth0.EnsureValidToken())
   g.Use(auth0.EnsureValidClaims())
+  g.Use(otelgin.Middleware(config.AppName))
   g.GET("/user/:userId", handler.GetUser)
   g.POST("/user", handler.CreateUser)
   g.DELETE("/user/:userId", handler.DeleteUser)
@@ -66,13 +68,7 @@ func NewUserHandler(g *gin.Engine, usecase usecase.UserUsecase) UserHandler {
 }
 
 func (handler *UserHandler) GetUser(c *gin.Context) {
-
 	appG := response.Gin{C: c}
-
-  tr := otel.Tracer("api_user")
-  _, span := tr.Start(c, "GET /user/:userId")
-  defer span.End()
-
   userId := appG.C.Param("userId")
   res, err := handler.userUsecase.GetUser(c, userId)
   if err != nil {
