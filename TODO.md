@@ -6,6 +6,7 @@
     - [x] jaeger exporter
     - [x] spans
     - [ ] nested spans
+- [ ] profiling
 
 ## Backlog 
 

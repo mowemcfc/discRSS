@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gin-contrib/cors"
+  "github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 
@@ -51,6 +52,7 @@ func NewUserHandler(g *gin.Engine, usecase usecase.UserUsecase) UserHandler {
 		AllowHeaders:     []string{"*", "Authorization"},
 		AllowCredentials: true,
 	}))
+  pprof.Register(g, "dev/pprof")
 
   g.Use(auth0.EnsureValidToken())
   g.Use(auth0.EnsureValidClaims())

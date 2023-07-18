@@ -21,6 +21,8 @@ import (
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
 
+  "github.com/pyroscope-io/client/pyroscope"
+
 	"github.com/sirupsen/logrus"
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -42,20 +44,46 @@ type App struct {
   IsLocal bool
 }
 
+func setupProfiling() error {
+  pyroscope.Start(pyroscope.Config{
+    ApplicationName: "discRSS",
+    ServerAddress:   "http://localhost:4040",
+    Logger:          pyroscope.StandardLogger,
+
+    ProfileTypes: []pyroscope.ProfileType{
+      // these profile types are enabled by default:
+      pyroscope.ProfileCPU,
+      pyroscope.ProfileAllocObjects,
+      pyroscope.ProfileAllocSpace,
+      pyroscope.ProfileInuseObjects,
+      pyroscope.ProfileInuseSpace,
+
+      // these profile types are optional:
+      pyroscope.ProfileGoroutines,
+      pyroscope.ProfileMutexCount,
+      pyroscope.ProfileMutexDuration,
+      pyroscope.ProfileBlockCount,
+      pyroscope.ProfileBlockDuration,
+    },
+  })
+
+  return nil
+}
+
 func setupTracing() error { 
 	exp, err := jaeger.New(jaeger.WithAgentEndpoint())
 	if err != nil {
 		return err
 	}
 
-	tp := tracesdk.NewTracerProvider(
-		tracesdk.WithBatcher(exp),
-		tracesdk.WithResource(resource.NewWithAttributes(
-			semconv.SchemaURL,
-			semconv.ServiceName(config.AppName),
-			attribute.String("environment", "dev"),
-			attribute.Int64("ID", 1),
-		)),
+  tp := tracesdk.NewTracerProvider(
+    tracesdk.WithBatcher(exp),
+      tracesdk.WithResource(resource.NewWithAttributes(
+        semconv.SchemaURL,
+        semconv.ServiceName(config.AppName),
+        attribute.String("environment", "dev"),
+        attribute.Int64("ID", 1),
+    )),
 	)
 
   otel.SetTracerProvider(tp)
@@ -64,10 +92,14 @@ func setupTracing() error {
 }
 
 func NewApp() (*App, error) {
+  gin.SetMode(gin.DebugMode)
   app := &App{
-    Engine: gin.Default(),
+    Engine: gin.New(),
     IsLocal: os.Getenv("LAMBDA_TASK_ROOT") == "",
   }
+
+  app.Engine.Use(gin.Logger())
+  app.Engine.Use(gin.Recovery())
 
   awsSession, err := sessions.GetAWSSession(app.IsLocal)
 	if err != nil {
@@ -80,7 +112,7 @@ func NewApp() (*App, error) {
   userUsecase := usecase.NewUserUsecase(userRepo)
   app.UserHandler = user.NewUserHandler(app.Engine, userUsecase)
 
-  setupTracing()
+  //setupProfiling()
 
   return app, nil
 }
