@@ -20,10 +20,10 @@ import (
 	"go.opentelemetry.io/otel/sdk/resource"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
+	"go.opentelemetry.io/otel/trace"
 
-  "github.com/pyroscope-io/client/pyroscope"
+	"github.com/pyroscope-io/client/pyroscope"
 
-	"github.com/sirupsen/logrus"
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
@@ -31,6 +31,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	ginLambdaAdapter "github.com/awslabs/aws-lambda-go-api-proxy/gin"
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 )
 
 type App struct {
@@ -41,6 +42,7 @@ type App struct {
   SecretsManagerSvc *secretsmanager.SecretsManager
   AppConfig *models.AppConfig
   UserHandler user.UserHandler
+  Tracer trace.Tracer
   IsLocal bool
 }
 
@@ -112,7 +114,10 @@ func NewApp() (*App, error) {
   userUsecase := usecase.NewUserUsecase(userRepo)
   app.UserHandler = user.NewUserHandler(app.Engine, userUsecase)
 
-  //setupProfiling()
+  err = setupTracing()
+  if err != nil {
+    return nil, fmt.Errorf("error setting up tracing: %s", err)
+  }
 
   return app, nil
 }

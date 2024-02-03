@@ -7,11 +7,11 @@ import (
 	"time"
 
 	"github.com/gin-contrib/cors"
-  "github.com/gin-contrib/pprof"
+	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 
-	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
+	"go.opentelemetry.io/otel"
 
 	"github.com/mowemcfc/discRSS/internal/auth0"
 	"github.com/mowemcfc/discRSS/internal/config"
@@ -56,7 +56,6 @@ func NewUserHandler(g *gin.Engine, usecase usecase.UserUsecase) UserHandler {
 
   g.Use(auth0.EnsureValidToken())
   g.Use(auth0.EnsureValidClaims())
-  g.Use(otelgin.Middleware(config.AppName))
   g.GET("/user/:userId", handler.GetUser)
   g.POST("/user", handler.CreateUser)
   g.DELETE("/user/:userId", handler.DeleteUser)
@@ -71,8 +70,11 @@ func NewUserHandler(g *gin.Engine, usecase usecase.UserUsecase) UserHandler {
 
 func (handler *UserHandler) GetUser(c *gin.Context) {
 	appG := response.Gin{C: c}
+  tracer := otel.GetTracerProvider().Tracer(config.AppName)
+  ctx, span := tracer.Start(c.Request.Context(), "user_handler")
+  defer span.End()
   userId := appG.C.Param("userId")
-  res, err := handler.userUsecase.GetUser(c, userId)
+  res, err := handler.userUsecase.GetUser(ctx, userId)
   if err != nil {
     code := getStatusCode(err)
     appG.Response(code, err.Error())
@@ -102,7 +104,7 @@ func (handler *UserHandler) CreateUser(c *gin.Context) {
     FeedList: make(map[string]*models.Feed),
     ChannelList: make(map[string]*models.DiscordChannel),
   }
-  res, err := handler.userUsecase.CreateUser(c, user)
+  res, err := handler.userUsecase.CreateUser(c.Request.Context(), user)
   if err != nil {
     code := getStatusCode(err)
     appG.Response(code, err.Error())
@@ -160,7 +162,7 @@ func (handler *UserHandler) AddFeed(c *gin.Context) {
 		Url:        addFeedParams.URL,
 		TimeFormat: "z",
 	}
-  res, err := handler.userUsecase.AddFeed(c, newFeed, userIdS)
+  res, err := handler.userUsecase.AddFeed(c.Request.Context(), newFeed, userIdS)
   if err != nil {
     code := getStatusCode(err)
     appG.Response(code, err.Error())
@@ -201,7 +203,7 @@ func (handler *UserHandler) GetFeed(c *gin.Context) {
 		return
 	}
 
-  res, err := handler.userUsecase.GetFeed(c, feedIdS, userIdS)
+  res, err := handler.userUsecase.GetFeed(c.Request.Context(), feedIdS, userIdS)
   if err != nil {
     code := getStatusCode(err)
     appG.Response(code, err.Error())
@@ -233,7 +235,7 @@ func (handler *UserHandler) RemoveFeed(c *gin.Context) {
     return
   }
 
-  err = handler.userUsecase.RemoveFeed(c, feedIdS, userIdS)
+  err = handler.userUsecase.RemoveFeed(c.Request.Context(), feedIdS, userIdS)
   if err != nil {
     code := getStatusCode(err)
     appG.Response(code, err.Error())
@@ -248,7 +250,7 @@ func (handler *UserHandler) ListFeedsAll(c *gin.Context) {
 
 	userIdS := appG.C.Param("userId")
 
-  res, err := handler.userUsecase.ListFeedsAll(c, userIdS)
+  res, err := handler.userUsecase.ListFeedsAll(c.Request.Context(), userIdS)
   if err != nil {
     code := getStatusCode(err)
     appG.Response(code, err.Error())

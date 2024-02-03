@@ -1,16 +1,18 @@
 package dynamodb
 
 import (
+  "context"
+
 	"github.com/mowemcfc/discRSS/internal/config"
 	"github.com/mowemcfc/discRSS/models"
 	"github.com/sirupsen/logrus"
+	"go.opentelemetry.io/otel"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
-	"github.com/gin-gonic/gin"
 )
 
 type DynamoDBUserRepository struct {
@@ -18,20 +20,23 @@ type DynamoDBUserRepository struct {
 }
 
 type UserRepository interface {
-  GetUser(ctx *gin.Context, userId string) (*models.UserAccount, error)
-  CreateUser(ctx *gin.Context, user *models.UserAccount) (*models.UserAccount, error)
-  AddFeed(ctx *gin.Context, feed *models.Feed, userId string) (*models.Feed, error)
-  GetFeed(ctx *gin.Context, feedId string, userId string) (*models.Feed, error)
-  UpdateFeed(ctx *gin.Context, feed *models.Feed) (*models.Feed, error)
-  RemoveFeed(ctx *gin.Context, feedId string, userId string) (error)
-  ListFeedsAll(ctx *gin.Context, userId string) ([]*models.Feed, error)
+  GetUser(ctx context.Context, userId string) (*models.UserAccount, error)
+  CreateUser(ctx context.Context, user *models.UserAccount) (*models.UserAccount, error)
+  AddFeed(ctx context.Context, feed *models.Feed, userId string) (*models.Feed, error)
+  GetFeed(ctx context.Context, feedId string, userId string) (*models.Feed, error)
+  UpdateFeed(ctx context.Context, feed *models.Feed) (*models.Feed, error)
+  RemoveFeed(ctx context.Context, feedId string, userId string) (error)
+  ListFeedsAll(ctx context.Context, userId string) ([]*models.Feed, error)
 }
 
 func NewDynamoDBUserRepository (client dynamodbiface.DynamoDBAPI) UserRepository {
   return &DynamoDBUserRepository{client}
 }
 
-func (d *DynamoDBUserRepository) GetUser(ctx *gin.Context, userId string) (*models.UserAccount, error) { 
+func (d *DynamoDBUserRepository) GetUser(ctx context.Context, userId string) (*models.UserAccount, error) { 
+  tracer := otel.GetTracerProvider().Tracer(config.AppName)
+  _, span := tracer.Start(ctx, "user_repo")
+  defer span.End()
 	getUserInput := &dynamodb.GetItemInput{
 		Key: map[string]*dynamodb.AttributeValue{
 			"userId": {
@@ -57,7 +62,7 @@ func (d *DynamoDBUserRepository) GetUser(ctx *gin.Context, userId string) (*mode
 	return &unmarshalled, nil
 }
 
-func (d *DynamoDBUserRepository) CreateUser(ctx *gin.Context, user *models.UserAccount) (*models.UserAccount, error) {  
+func (d *DynamoDBUserRepository) CreateUser(ctx context.Context, user *models.UserAccount) (*models.UserAccount, error) {  
   dynamoEncoder := dynamodbattribute.NewEncoder(func(e *dynamodbattribute.Encoder) {
 		e.EnableEmptyCollections = true
 	})
@@ -89,7 +94,7 @@ func (d *DynamoDBUserRepository) CreateUser(ctx *gin.Context, user *models.UserA
 	return user, nil
 }
 
-func (d *DynamoDBUserRepository) AddFeed(ctx *gin.Context, feed *models.Feed, userId string) (*models.Feed, error) { 
+func (d *DynamoDBUserRepository) AddFeed(ctx context.Context, feed *models.Feed, userId string) (*models.Feed, error) { 
 	marshalledFeed, err := dynamodbattribute.Marshal(feed)
 	if err != nil {
     logrus.Errorf("error marshalling feed struct into dynamodbattribute map: ", err)
@@ -129,7 +134,7 @@ func (d *DynamoDBUserRepository) AddFeed(ctx *gin.Context, feed *models.Feed, us
   return feed, nil
 }
 
-func (d *DynamoDBUserRepository) GetFeed(ctx *gin.Context, feedId string, userId string) (*models.Feed, error) { 
+func (d *DynamoDBUserRepository) GetFeed(ctx context.Context, feedId string, userId string) (*models.Feed, error) { 
   input := &dynamodb.GetItemInput{
 		ExpressionAttributeNames: map[string]*string{
 			"#fID": aws.String(feedId),
@@ -160,7 +165,7 @@ func (d *DynamoDBUserRepository) GetFeed(ctx *gin.Context, feedId string, userId
   return &models.Feed{}, nil
 }
 
-func (d *DynamoDBUserRepository) RemoveFeed(ctx *gin.Context, feedId string, userId string) (error) {
+func (d *DynamoDBUserRepository) RemoveFeed(ctx context.Context, feedId string, userId string) (error) {
 	input := &dynamodb.UpdateItemInput{
 		ExpressionAttributeNames: map[string]*string{
 			"#fID": aws.String(feedId),
@@ -195,11 +200,11 @@ func (d *DynamoDBUserRepository) RemoveFeed(ctx *gin.Context, feedId string, use
   return nil
 }
 
-func (d *DynamoDBUserRepository) UpdateFeed(ctx *gin.Context, feed *models.Feed) (*models.Feed, error) { 
+func (d *DynamoDBUserRepository) UpdateFeed(ctx context.Context, feed *models.Feed) (*models.Feed, error) { 
   return &models.Feed{}, nil 
 }
 
-func (d *DynamoDBUserRepository) ListFeedsAll(ctx *gin.Context, userId string) ([]*models.Feed, error) {
+func (d *DynamoDBUserRepository) ListFeedsAll(ctx context.Context, userId string) ([]*models.Feed, error) {
   input := &dynamodb.GetItemInput{
     TableName: aws.String(config.UserTableName),
 		Key: map[string]*dynamodb.AttributeValue{
