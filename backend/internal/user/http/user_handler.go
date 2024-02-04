@@ -93,7 +93,7 @@ func (handler *UserHandler) CreateUser(c *gin.Context) {
 
 	var createUserParams CreateUserParams
 	if err := c.BindJSON(&createUserParams); err != nil {
-    logrus.Errorf("error binding user params JSON to models.UserAccount struct: ", err)
+    logrus.Error("error binding user params JSON to models.UserAccount struct: ", err)
     appG.Response(http.StatusBadRequest, "bad request format")
     return
 	}
@@ -129,7 +129,7 @@ func (handler *UserHandler) AddFeed(c *gin.Context) {
   var addFeedParams AddFeedParams
 
 	if err := appG.C.BindJSON(&addFeedParams); err != nil {
-    logrus.Errorf("error binding addFeed params JSON to addFeedParams struct: ", err)
+    logrus.Error("error binding addFeed params JSON to addFeedParams struct: ", err)
 		appG.Response(http.StatusBadRequest, "request data is not structured correctly")
 		return
 	}
@@ -225,12 +225,12 @@ func (handler *UserHandler) RemoveFeed(c *gin.Context) {
 	feedIdS := appG.C.Param("feedId")
   feedId, err := strconv.Atoi(feedIdS)
   if err != nil {
-    logrus.Errorf("error converting request feed ID to int: ", err)
+    logrus.Error("error converting request feed ID to int: ", err)
     appG.Response(http.StatusBadRequest, "error parsing feedId param")
     return
   }
   if feedId < 0 {
-    logrus.Errorf("error: feedId value was less than 0: ", err)
+    logrus.Error("error: feedId value was less than 0: ", err)
     appG.Response(http.StatusBadRequest, "feedId value is less than 0")
     return
   }

@@ -48,14 +48,14 @@ func (d *DynamoDBUserRepository) GetUser(ctx context.Context, userId string) (*m
 
 	user, err := d.client.GetItem(getUserInput)
 	if err != nil {
-    logrus.Errorf("error getting user from ddb", err)
+    logrus.Error("error getting user from ddb", err)
     return nil, models.ErrInternalServerError
 	}
 
 	unmarshalled := models.UserAccount{}
 	err = dynamodbattribute.UnmarshalMap(user.Item, &unmarshalled)
 	if err != nil {
-    logrus.Errorf("error unmarshalling response payload into user struct", err)
+    logrus.Error("error unmarshalling response payload into user struct", err)
 		return nil, models.ErrInternalServerError
 	}
 
@@ -68,7 +68,7 @@ func (d *DynamoDBUserRepository) CreateUser(ctx context.Context, user *models.Us
 	})
 	marshalledUser, err := dynamoEncoder.Encode(user)
 	if err != nil {
-    logrus.Errorf("error marshalling new user to ddb attribute map: ", err)
+    logrus.Error("error marshalling new user to ddb attribute map: ", err)
 		return nil, models.ErrInternalServerError
 	}
 
@@ -83,11 +83,11 @@ func (d *DynamoDBUserRepository) CreateUser(ctx context.Context, user *models.Us
 	if err != nil {
     if aerr, ok := err.(awserr.Error); ok {
       if aerr.Code() == dynamodb.ErrCodeConditionalCheckFailedException {
-          logrus.Errorf("item already exists in ddb: %v", err)
+          logrus.Error("item already exists in ddb: ", err)
           return nil, models.ErrConflict
       }
     }
-    logrus.Errorf("error putting new user into ddb: ", err)
+    logrus.Error("error putting new user into ddb: ", err)
     return nil, models.ErrInternalServerError
 	}
 
@@ -151,14 +151,14 @@ func (d *DynamoDBUserRepository) GetFeed(ctx context.Context, feedId string, use
 
   feed, err := d.client.GetItem(input)
   if err != nil {
-    logrus.Error("error getting feed %d for user %d: %s", feedId, userId, err)
+    logrus.Errorf("error getting feed %s for user %s: %s", feedId, userId, err)
     return nil, models.ErrInternalServerError
   }
 
 	unmarshalled := models.Feed{}
 	err = dynamodbattribute.UnmarshalMap(feed.Item, &unmarshalled)
 	if err != nil {
-    logrus.Errorf("error unmarshalling response payload into feed struct", err)
+    logrus.Error("error unmarshalling response payload into feed struct", err)
 		return nil, models.ErrInternalServerError
 	}
 
@@ -185,13 +185,13 @@ func (d *DynamoDBUserRepository) RemoveFeed(ctx context.Context, feedId string, 
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
 			if aerr.Code() == dynamodb.ErrCodeResourceNotFoundException {
-				logrus.Errorf("error deleting feed %d for user %d: %s %s", feedId, userId, dynamodb.ErrCodeResourceNotFoundException, aerr.Error())
+				logrus.Errorf("error deleting feed %s for user %s: %s %s", feedId, userId, dynamodb.ErrCodeResourceNotFoundException, aerr.Error())
         return models.ErrNotFound
       } else if aerr.Code() == dynamodb.ErrCodeConditionalCheckFailedException {
-				logrus.Errorf("error deleting feed %d for user %d: %s %s", feedId, userId, dynamodb.ErrCodeResourceNotFoundException, aerr.Error())
+				logrus.Errorf("error deleting feed %s for user %s: %s %s", feedId, userId, dynamodb.ErrCodeResourceNotFoundException, aerr.Error())
         return models.ErrNotFound
       } else {
-        logrus.Errorf("error deleting feed %s for user %d: %s", feedId, userId, err)
+        logrus.Errorf("error deleting feed %s for user %s: %s", feedId, userId, err)
         return models.ErrInternalServerError
       }
     }
@@ -217,7 +217,7 @@ func (d *DynamoDBUserRepository) ListFeedsAll(ctx context.Context, userId string
 
   feedList, err := d.client.GetItem(input)
   if err != nil {
-    logrus.Errorf("error getting feed list for user %d: %s", userId, err)
+    logrus.Errorf("error getting feed list for user %s: %s", userId, err)
     return nil, models.ErrInternalServerError
   }
 
@@ -226,7 +226,7 @@ func (d *DynamoDBUserRepository) ListFeedsAll(ctx context.Context, userId string
   }{}
 	err = dynamodbattribute.UnmarshalMap(feedList.Item, &unmarshalled)
 	if err != nil {
-    logrus.Errorf("error unmarshalling response payload into feed list struct", err)
+    logrus.Error("error unmarshalling response payload into feed list struct", err)
 		return nil, models.ErrInternalServerError
 	}
 
