@@ -4,11 +4,15 @@ name: CI
 on: 
   pull_request:
     branches: [ main ]
-
+    types: 
+      - synchronize
+      - opened
+      - reopened
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    working-directory: ./backend
     steps:
       - uses: actions/checkout@v3
 
