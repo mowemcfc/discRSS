@@ -22,7 +22,7 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/pyroscope-io/client/pyroscope"
+  pyroscope "github.com/grafana/pyroscope-go"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -40,6 +40,7 @@ type App struct {
   AwsSession *session.Session
   DdbSvc dynamodbiface.DynamoDBAPI
   SecretsManagerSvc *secretsmanager.SecretsManager
+
   AppConfig *models.AppConfig
   UserHandler user.UserHandler
   Tracer trace.Tracer
