@@ -97,7 +97,7 @@ func (d *DynamoDBUserRepository) CreateUser(ctx context.Context, user *models.Us
 func (d *DynamoDBUserRepository) AddFeed(ctx context.Context, feed *models.Feed, userId string) (*models.Feed, error) { 
 	marshalledFeed, err := dynamodbattribute.Marshal(feed)
 	if err != nil {
-    logrus.Errorf("error marshalling feed struct into dynamodbattribute map: ", err)
+    logrus.Error("error marshalling feed struct into dynamodbattribute map: ", err)
     return nil, models.ErrInternalServerError
 	}
 
@@ -122,10 +122,10 @@ func (d *DynamoDBUserRepository) AddFeed(ctx context.Context, feed *models.Feed,
   if err != nil {
     if aerr, ok := err.(awserr.Error); ok {
       if aerr.Code() == dynamodb.ErrCodeResourceNotFoundException {
-        logrus.Errorf("error adding feed for user %d: %s %s", userId, dynamodb.ErrCodeResourceNotFoundException, aerr.Error())
+        logrus.Errorf("error adding feed for user %s: %s %s", userId, dynamodb.ErrCodeResourceNotFoundException, aerr.Error())
         return nil, models.ErrNotFound
       } else {
-        logrus.Errorf("error adding feed for user %d: %s", userId, err)
+        logrus.Errorf("error adding feed for user %s: %s", userId, err)
         return nil, models.ErrInternalServerError
       }
     }
