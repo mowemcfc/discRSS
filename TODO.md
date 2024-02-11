@@ -4,6 +4,7 @@
 
 - [ ] move all this shit into issues
 - [ ] direct users who have auth'd for the first time but have no profile into the "create profile" area
+- [ ] expand tracing to rest of service
 
 ## Backlog 
 
