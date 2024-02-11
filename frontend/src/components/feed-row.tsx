@@ -59,17 +59,17 @@ export const NewFeedRow = ({addNewFeedStateHandler}: NewFeedRowProps) => {
           <td
             className="px-6 py-4"
           >
-            <input type="text" onChange={newFeedTitleChangeHandler} 
-              id="newFeedNameInput" name="feedName" placeholder="Feed Name" value={newFeedTitle}/>
+            <input type="text" className="indent-2 text-black/75" onChange={newFeedTitleChangeHandler} 
+              id="newFeedNameInput" name="feedName" placeholder="..." value={newFeedTitle}/>
           </td>
           <td
             className="px-6 py-4"
           >
-            <input type="text" onChange={newFeedUrlChangeHandler} 
-              id="newFeedUrlInput" name="feedUrl" placeholder="Feed URL" value={newFeedUrl}/>
+            <input type="text" className="indent-2 text-black/75" onChange={newFeedUrlChangeHandler} 
+              id="newFeedUrlInput" name="feedUrl" placeholder="..." value={newFeedUrl}/>
           </td>
           <td
-            className="w-1/12 px-6 py-4 justify-start"
+            className="w-1/12 px-6 py-4"
           >
             <input type="image" alt="Add feed" onClick={newFeedSubmitHandler} src={PlusIcon} width="20vw" height="20vw"/>
           </td>
