@@ -2,6 +2,8 @@
 
 ## Priority
 
+- [ ] move all this shit into issues
+- [ ] direct users who have auth'd for the first time but have no profile into the "create profile" area
 - [ ] tracing
     - [x] jaeger exporter
     - [x] spans
